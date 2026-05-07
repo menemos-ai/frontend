@@ -27,3 +27,18 @@ export const LISTED_EVENT = MemoryMarketplaceABI.find(
   (x): x is Extract<(typeof MemoryMarketplaceABI)[number], { type: 'event'; name: 'Listed' }> =>
     x.type === 'event' && 'name' in x && x.name === 'Listed',
 )!
+
+export const RENTED_EVENT = MemoryMarketplaceABI.find(
+  (x): x is Extract<(typeof MemoryMarketplaceABI)[number], { type: 'event'; name: 'Rented' }> =>
+    x.type === 'event' && 'name' in x && x.name === 'Rented',
+)!
+
+export const BOUGHT_EVENT = MemoryMarketplaceABI.find(
+  (x): x is Extract<(typeof MemoryMarketplaceABI)[number], { type: 'event'; name: 'Bought' }> =>
+    x.type === 'event' && 'name' in x && x.name === 'Bought',
+)!
+
+export const FORKED_EVENT = MemoryMarketplaceABI.find(
+  (x): x is Extract<(typeof MemoryMarketplaceABI)[number], { type: 'event'; name: 'Forked' }> =>
+    x.type === 'event' && 'name' in x && x.name === 'Forked',
+)!

@@ -132,6 +132,147 @@ export const MOCK_TOKENS: MockToken[] = [
   },
 ]
 
+export interface MockStrategyMeta {
+  strategy: string
+  category: string
+  assets: string[]
+  performance30d: string
+  tags: string[]
+  agentId: string
+  version: string
+}
+
+export const MOCK_STRATEGY_META: Record<string, MockStrategyMeta> = {
+  '1': {
+    strategy: 'momentum-weighted rebalancing',
+    category: 'trading',
+    assets: ['ETH', 'BTC', 'USDC'],
+    performance30d: '+8.4%',
+    tags: ['defi', 'rebalancing', 'momentum'],
+    agentId: 'defi-rebalancer-v1',
+    version: '1.0.0',
+  },
+  '2': {
+    strategy: 'yield optimizer — stablecoin',
+    category: 'yield',
+    assets: ['USDC', 'USDT', 'DAI'],
+    performance30d: '+3.2%',
+    tags: ['yield', 'stablecoin', 'low-risk'],
+    agentId: 'yield-optimizer-v2',
+    version: '2.1.0',
+  },
+  '3': {
+    strategy: 'BTC dominance tracker',
+    category: 'analytics',
+    assets: ['BTC', 'ETH'],
+    performance30d: '+12.1%',
+    tags: ['analytics', 'dominance', 'macro'],
+    agentId: 'btc-dominance-v1',
+    version: '1.2.0',
+  },
+  '4': {
+    strategy: 'cross-chain arb scanner',
+    category: 'trading',
+    assets: ['ETH', 'USDC', 'WBTC'],
+    performance30d: '+5.7%',
+    tags: ['arbitrage', 'cross-chain', 'advanced'],
+    agentId: 'arb-scanner-v3',
+    version: '3.0.1',
+  },
+  '5': {
+    strategy: 'DeFi liquidity monitor',
+    category: 'analytics',
+    assets: ['ETH', 'USDC', 'UNI'],
+    performance30d: '+2.9%',
+    tags: ['defi', 'liquidity', 'monitoring'],
+    agentId: 'defi-monitor-v1',
+    version: '1.0.0',
+  },
+  '6': {
+    strategy: 'NFT floor price alert',
+    category: 'nft',
+    assets: ['ETH'],
+    performance30d: '+15.3%',
+    tags: ['nft', 'alerts', 'floor-price'],
+    agentId: 'nft-alert-v2',
+    version: '2.0.0',
+  },
+}
+
+export interface MockRental {
+  tokenId: string
+  expiresAt: number // unix timestamp (seconds)
+  pricePaid: bigint
+  txHash: string
+}
+
+const now = Math.floor(Date.now() / 1000)
+
+export const MOCK_RENTALS: MockRental[] = [
+  {
+    tokenId: '2',
+    expiresAt: now + 86400 * 5, // expires in 5 days
+    pricePaid: BigInt('250000000000000000'),
+    txHash: '0xabc123def456abc123def456abc123def456abc123def456abc123def456abc1',
+  },
+  {
+    tokenId: '3',
+    expiresAt: now - 86400 * 2, // expired 2 days ago
+    pricePaid: BigInt('60000000000000000'),
+    txHash: '0x789abc012def789abc012def789abc012def789abc012def789abc012def7890',
+  },
+  {
+    tokenId: '5',
+    expiresAt: now + 86400 * 1, // expires in 1 day
+    pricePaid: BigInt('40000000000000000'),
+    txHash: '0x456def789abc456def789abc456def789abc456def789abc456def789abc4560',
+  },
+]
+
+export interface MockEarning {
+  type: 'sale' | 'rent' | 'fork'
+  tokenId: string
+  amount: bigint
+  from: string
+  timestamp: number
+  txHash: string
+}
+
+export const MOCK_EARNINGS: MockEarning[] = [
+  {
+    type: 'rent',
+    tokenId: '1',
+    amount: BigInt('50000000000000000'),
+    from: '0xaaaa35Cc6634C0532925a3b8D4C9c5e9C8b5aaaa',
+    timestamp: now - 86400 * 3,
+    txHash: '0x111aaa222bbb333ccc444ddd555eee666fff777aaa888bbb999ccc000ddd111a',
+  },
+  {
+    type: 'sale',
+    tokenId: '4',
+    amount: BigInt('300000000000000000'),
+    from: '0xcccc35Cc6634C0532925a3b8D4C9c5e9C8b5cccc',
+    timestamp: now - 86400 * 10,
+    txHash: '0x222bbb333ccc444ddd555eee666fff777aaa888bbb999ccc000ddd111aaa2220',
+  },
+  {
+    type: 'rent',
+    tokenId: '1',
+    amount: BigInt('100000000000000000'),
+    from: '0xeeee35Cc6634C0532925a3b8D4C9c5e9C8b5eeee',
+    timestamp: now - 86400 * 15,
+    txHash: '0x333ccc444ddd555eee666fff777aaa888bbb999ccc000ddd111aaa222bbb3330',
+  },
+  {
+    type: 'fork',
+    tokenId: '1',
+    amount: BigInt('0'),
+    from: '0xffff35Cc6634C0532925a3b8D4C9c5e9C8b5ffff',
+    timestamp: now - 86400 * 20,
+    txHash: '0x444ddd555eee666fff777aaa888bbb999ccc000ddd111aaa222bbb333ccc4440',
+  },
+]
+
 export const MOCK_LISTING_INFO: Record<string, ListingInfo> = {
   '1': {
     tokenId: '1',
