@@ -8,20 +8,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Separator } from '@/components/ui/separator'
 import {
   REGISTRY_ADDRESS,
   REGISTRY_ABI,
   MARKETPLACE_ADDRESS,
   MARKETPLACE_ABI,
 } from '@/lib/contracts'
+import { DEMO_MODE, MOCK_TOKENS } from '@/lib/mock-data'
 
 interface MintedToken {
   tokenId: string
   contentHash: string
-  timestamp: bigint
+  blockNumber: bigint
 }
 
 function truncate(addr: string) {
@@ -61,7 +60,6 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
     setStatus(null)
 
     try {
-      // Approval step: check and request setApprovalForAll before list()
       const approved = await publicClient.readContract({
         address: registryAddress,
         abi: REGISTRY_ABI,
@@ -113,8 +111,8 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
   return (
     <form onSubmit={handleList} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label htmlFor={`price-${tokenId}`} className="text-xs text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor={`price-${tokenId}`} className="text-xs text-white/50">
             Buy price (A0GI)
           </Label>
           <Input
@@ -125,11 +123,11 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
             placeholder="0.1"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="h-8 text-sm"
+            className="h-8 text-sm bg-white/5 border-white/15 text-white placeholder:text-white/30 focus-visible:ring-violet-500/50"
           />
         </div>
-        <div className="space-y-1">
-          <Label htmlFor={`rental-${tokenId}`} className="text-xs text-muted-foreground">
+        <div className="space-y-1.5">
+          <Label htmlFor={`rental-${tokenId}`} className="text-xs text-white/50">
             Rent/day (A0GI)
           </Label>
           <Input
@@ -140,39 +138,42 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
             placeholder="0.01"
             value={rentalPricePerDay}
             onChange={(e) => setRentalPricePerDay(e.target.value)}
-            className="h-8 text-sm"
+            className="h-8 text-sm bg-white/5 border-white/15 text-white placeholder:text-white/30 focus-visible:ring-violet-500/50"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2">
           <Checkbox
             id={`sale-${tokenId}`}
             checked={isForSale}
             onCheckedChange={(v) => setIsForSale(!!v)}
+            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
           />
-          <Label htmlFor={`sale-${tokenId}`} className="text-xs cursor-pointer">
+          <Label htmlFor={`sale-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
             For sale
           </Label>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <Checkbox
             id={`rent-${tokenId}`}
             checked={isForRent}
             onCheckedChange={(v) => setIsForRent(!!v)}
+            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
           />
-          <Label htmlFor={`rent-${tokenId}`} className="text-xs cursor-pointer">
+          <Label htmlFor={`rent-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
             For rent
           </Label>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <Checkbox
             id={`fork-${tokenId}`}
             checked={isForFork}
             onCheckedChange={(v) => setIsForFork(!!v)}
+            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
           />
-          <Label htmlFor={`fork-${tokenId}`} className="text-xs cursor-pointer">
+          <Label htmlFor={`fork-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
             For fork
           </Label>
         </div>
@@ -181,8 +182,8 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
       {isForFork && (
         <div className="space-y-2">
           <div className="flex justify-between">
-            <Label className="text-xs text-muted-foreground">Fork royalty</Label>
-            <span className="text-xs text-foreground">
+            <Label className="text-xs text-white/50">Fork royalty</Label>
+            <span className="text-xs text-white/80">
               {(forkRoyaltyBps / 100).toFixed(2)}%
             </span>
           </div>
@@ -192,13 +193,14 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
             step={1}
             value={[forkRoyaltyBps]}
             onValueChange={([v]) => setForkRoyaltyBps(v)}
+            className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-400"
           />
         </div>
       )}
 
       {status && (
         <p
-          className={`text-xs ${status.startsWith('Error') ? 'text-destructive' : 'text-violet-400'}`}
+          className={`text-xs ${status.startsWith('Error') ? 'text-red-400' : 'text-violet-400'}`}
         >
           {status}
         </p>
@@ -207,7 +209,7 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
       <Button
         type="submit"
         disabled={pending}
-        className="w-full bg-violet-600 hover:bg-violet-500 text-white text-sm"
+        className="w-full btn-glow text-white text-sm rounded-xl h-9"
       >
         {pending ? status ?? 'Processing…' : 'List on Marketplace'}
       </Button>
@@ -225,33 +227,36 @@ function TokenRow({
   onToggle: () => void
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="glass-card rounded-2xl overflow-hidden transition-all duration-300 hover:border-violet-500/30">
       <div
-        className="flex items-center justify-between p-4 cursor-pointer"
+        className="flex items-center justify-between px-5 py-4 cursor-pointer"
         onClick={onToggle}
       >
         <div className="flex items-center gap-3">
-          <span className="text-sm font-mono text-muted-foreground">
+          <span className="text-sm font-mono text-white/50">
             #{token.tokenId}
           </span>
-          <span className="text-xs font-mono text-muted-foreground">
+          <span className="text-xs font-mono text-white/30">
             {bytesToHex(token.contentHash as `0x${string}`)}
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {new Date(Number(token.timestamp) * 1000).toLocaleDateString()}
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-white/30">
+            #{token.blockNumber.toString()}
           </span>
-          <Badge
-            variant="outline"
-            className="text-[10px] border-violet-500/30 text-violet-400 cursor-pointer"
+          <span
+            className={`text-[10px] px-2.5 py-1 rounded-full font-medium transition-colors ${
+              expanded
+                ? 'bg-violet-500/20 border border-violet-500/40 text-violet-300'
+                : 'glass text-white/50 hover:text-white'
+            }`}
           >
             {expanded ? 'Close' : 'List'}
-          </Badge>
+          </span>
         </div>
       </div>
       {expanded && (
-        <div className="px-4 pb-4 border-t border-border pt-4">
+        <div className="px-5 pb-5 border-t border-white/10 pt-5">
           <ListForm tokenId={token.tokenId} onSuccess={() => {}} />
         </div>
       )}
@@ -265,6 +270,7 @@ export default function DashboardPage() {
   const [tokens, setTokens] = useState<MintedToken[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
 
   useEffect(() => {
     if (!isConnected || !address || !publicClient || !REGISTRY_ADDRESS) {
@@ -291,10 +297,12 @@ export default function DashboardPage() {
         const minted = logs.map((log) => ({
           tokenId: log.args.tokenId!.toString(),
           contentHash: log.args.contentHash as string,
-          timestamp: log.blockNumber ?? 0n,
-        }))
+          blockNumber: log.blockNumber ?? 0n,
+        })).reverse()
 
-        setTokens(minted.reverse())
+        const usingMock = minted.length === 0 && DEMO_MODE
+        setTokens(usingMock ? MOCK_TOKENS : minted)
+        setIsDemo(usingMock)
       } catch {
         // silently show empty on error
       } finally {
@@ -308,12 +316,10 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-semibold text-foreground mb-4">
-          Dashboard
-        </h1>
-        <div className="text-center py-20 border border-dashed border-border rounded-lg">
-          <p className="text-muted-foreground text-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <h1 className="text-3xl font-bold text-white mb-4">Dashboard</h1>
+        <div className="text-center py-24 glass-card rounded-2xl">
+          <p className="text-white/50 text-sm">
             Connect your wallet to view your memory tokens.
           </p>
         </div>
@@ -322,33 +328,41 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-          <p className="text-xs font-mono text-muted-foreground mt-1">
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-xs font-mono text-white/30 mt-1">
             {truncate(address!)}
           </p>
+          {isDemo && (
+            <span className="inline-flex items-center gap-1.5 mt-2 text-[11px] px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Demo mode — showing sample tokens
+            </span>
+          )}
         </div>
         {!loading && (
-          <span className="text-sm text-muted-foreground">
+          <span className="glass px-4 py-1.5 rounded-xl text-sm text-white/50">
             {tokens.length} token{tokens.length !== 1 ? 's' : ''}
           </span>
         )}
       </div>
 
-      <Separator className="mb-6" />
+      <div className="border-t border-white/10 mb-6" />
 
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+            <div key={i} className="glass-card rounded-2xl p-5">
+              <Skeleton className="h-5 w-full bg-white/10" />
+            </div>
           ))}
         </div>
       ) : tokens.length === 0 ? (
-        <div className="text-center py-20 border border-dashed border-border rounded-lg">
-          <p className="text-muted-foreground text-sm">No memory tokens yet.</p>
-          <p className="text-muted-foreground text-xs mt-1">
+        <div className="text-center py-24 glass-card rounded-2xl">
+          <p className="text-white/50 text-sm">No memory tokens yet.</p>
+          <p className="text-white/30 text-xs mt-1">
             Run the reference agent to mint your first snapshot.
           </p>
         </div>

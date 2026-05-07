@@ -4,46 +4,85 @@
 
 @layer base {
   :root {
-    /* Force dark theme — zinc-950 base, violet accent */
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 252 55% 6%;
+    --foreground: 0 0% 96%;
 
-    --card: 240 10% 7%;
-    --card-foreground: 0 0% 98%;
+    --card: 252 45% 9%;
+    --card-foreground: 0 0% 96%;
 
-    --popover: 240 10% 7%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 252 50% 7%;
+    --popover-foreground: 0 0% 96%;
 
-    /* violet-500 */
-    --primary: 263 70% 50%;
+    --primary: 263 70% 58%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 252 40% 14%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 252 40% 13%;
+    --muted-foreground: 252 20% 55%;
 
-    --accent: 240 4% 16%;
+    --accent: 263 60% 48%;
     --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62% 30%;
+    --destructive: 0 62% 35%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 263 70% 50%;
+    --border: 252 30% 20%;
+    --input: 252 40% 14%;
+    --ring: 263 70% 58%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
-  /* Lock dark — no light variant needed */
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background: #0a0618;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .btn-glow {
+    background: linear-gradient(135deg, #7c3aed, #9333ea);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.4);
+    transition: box-shadow 0.2s, opacity 0.2s;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.6);
+    opacity: 0.92;
   }
 }
