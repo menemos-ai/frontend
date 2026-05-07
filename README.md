@@ -7,7 +7,7 @@ This is one of three repositories that make up Mnemos:
 | Repo | Purpose |
 |---|---|
 | [`mnemos-contract`](../contract) | Solidity contracts deployed to 0G Chain |
-| [`mnemos-backend`](../backend) | TypeScript SDK + reference agent |
+| [`mnemos-backend`](../backend) | TypeScript SDK + NestJS REST API + reference agent |
 | [`mnemos-frontend`](.) (this repo) | Next.js marketplace UI |
 
 Mnemos is a protocol, not a platform — anyone can build a different marketplace UI on top of the same contracts. This is the canonical reference UI.
@@ -23,7 +23,7 @@ A Next.js App Router app with four pages:
 - **`/listing/[id]`** — listing detail. Shows on-chain provenance (content hash, storage URI, lineage ancestors, creator, timestamp) plus action panels for buy / rent / fork.
 - **`/dashboard`** — producer view. Lists tokens minted by the connected wallet, with a form to set listing terms.
 
-Everything is read-from-chain or write-to-chain. There's **no traditional backend**, no database, no API routes. The app should still work after being deployed as static HTML.
+Chain reads and user-signed writes go directly through wagmi/viem in the browser. Agent-side operations (memory snapshots, minting) are delegated to the `mnemos-backend` REST API — the frontend never holds a private key. There's no database and no API routes inside this repo.
 
 ---
 
@@ -34,8 +34,20 @@ Everything is read-from-chain or write-to-chain. There's **no traditional backen
 - [`@tanstack/react-query`](https://tanstack.com/query) for caching (provided by wagmi)
 - [Tailwind CSS](https://tailwindcss.com/) for styling
 - [`@mnemos/sdk`](../backend) as a peer dependency for shared types
+- `mnemos-backend` REST API (NestJS, port 3001) for agent-side operations
 
 Node.js ≥ 20. Package manager: `pnpm`.
+
+### Responsibility split
+
+| Operation | Who handles it |
+|---|---|
+| Browse listings (read chain) | `wagmi` / `viem` direct |
+| Listing detail + provenance | `wagmi` / `viem` direct — or `GET /api/memory/:id/info` |
+| User buy / rent / fork | `wagmi` (user signs with their wallet) |
+| List token on marketplace | `wagmi` (user signs) |
+| Agent memory snapshot + mint | `POST /api/memory/snapshot` (server wallet) |
+| Load / decrypt memory bundle | `GET /api/memory/:id` (server wallet decrypts) |
 
 ---
 
@@ -51,6 +63,7 @@ You also need:
 
 1. The contracts deployed (see [`mnemos-contract`](../contract))
 2. The SDK either published to npm or linked locally (see [`mnemos-backend`](../backend))
+3. The backend API running (see [`mnemos-backend`](../backend) — `pnpm dev` inside `apps/api`)
 
 ### Setup
 
@@ -64,15 +77,22 @@ cp .env.example .env.local
 #   NEXT_PUBLIC_MARKETPLACE_ADDRESS=0x... (from contract repo deploy)
 #   NEXT_PUBLIC_OG_RPC_URL=https://evmrpc.0g.ai
 #   NEXT_PUBLIC_OG_CHAIN_ID=
+#   NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
 
 ### Run
 
 ```bash
-pnpm dev                     # localhost:3000
+# Terminal 1 — backend API (mnemos-backend repo)
+cd ../backend && pnpm --filter @mnemos/api dev   # localhost:3001
+
+# Terminal 2 — frontend
+pnpm dev                                          # localhost:3000
 ```
 
-For end-to-end testing, run the reference agent from `mnemos-backend` in another terminal — you'll see snapshots appearing in the dashboard within seconds.
+For end-to-end testing, run the reference agent from `mnemos-backend` in a third terminal — you'll see snapshots appearing in the dashboard within seconds.
+
+Swagger docs for the backend API: `http://localhost:3001/docs`
 
 ---
 

@@ -1,0 +1,27 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# env files
+.env
+.env*.local
+!.env.example
+
+# misc
+.DS_Store
+*.pem
+.mcp.json
+package-lock.json
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

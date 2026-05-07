@@ -13,7 +13,9 @@ Mnemos is split across three repos:
 This repo depends on:
 
 - `mnemos-contract` for deployed addresses (env vars at runtime) and ABIs (literal in `src/lib/contracts.ts`).
-- `mnemos-backend` for the published `@mnemos/sdk` package (types only — the frontend doesn't run the SDK's auto-snapshot logic, since that's an agent runtime concern).
+- `mnemos-backend` for two things:
+  - The published `@mnemos/sdk` package (types only in the frontend — auto-snapshot logic runs in the agent, not here).
+  - The `apps/api` NestJS REST API (port 3001) for agent-side operations that require a server wallet (snapshot, mint, load/decrypt memory).
 
 When the contract changes, this repo's ABI in `src/lib/contracts.ts` has to update to match. There is no automatic ABI sync — stale ABIs cause silent encoder failures.
 
@@ -26,7 +28,7 @@ Three core pages plus a landing page:
 - `/listing/[id]` — listing detail. Shows on-chain provenance (content hash, storage URI, lineage ancestors, creator, timestamp) plus the three action panels (buy / rent / fork).
 - `/dashboard` — producer view. Lists tokens minted by the connected wallet and provides a form to set listing terms.
 
-Everything is read-from-chain or write-to-chain. There's no traditional backend, no database, no API routes. This matters: the app should still work after you deploy it as static HTML.
+Chain reads and user-signed writes go directly through wagmi/viem in the browser. Agent-side operations are delegated to the `mnemos-backend` REST API — the frontend never holds a private key. There's no database and no API routes inside this repo. The app's core browsing and buying flows still work without the backend API running (they read chain directly); the API is only required for memory load/decrypt and agent snapshot features.
 
 ## Tech stack
 
@@ -35,6 +37,22 @@ Next.js 14 App Router. `wagmi` + `viem` for chain I/O. `@tanstack/react-query` f
 All chain-reading pages are client components (`"use client"`) because wagmi hooks are client-only. If a page is purely informational (like the landing), keep it as a server component.
 
 The chain configuration lives in `src/lib/wagmi.ts`. Contract addresses + ABIs in `src/lib/contracts.ts`. These two files are the only places that should know about chain specifics — everything else just imports from them.
+
+### Backend API integration
+
+The `mnemos-backend` REST API runs at `NEXT_PUBLIC_API_URL` (default `http://localhost:3001/api`). The frontend calls it for:
+
+| Endpoint | Used by |
+|---|---|
+| `GET /api/memory/:tokenId/info` | Listing detail page — provenance info |
+| `GET /api/memory/:tokenId` | Listing detail page — decrypt + load bundle |
+| `GET /api/marketplace/listings/:tokenId` | Listing detail page — price/terms |
+| `POST /api/memory/snapshot` | Reference agent only (not called from UI) |
+| `POST /api/marketplace/list` | Dashboard (alternative to wagmi flow) |
+
+User-signed actions (buy, rent, fork) bypass the API entirely and go straight to the chain via `useWriteContract` — the backend API uses the server wallet, not the user's wallet.
+
+All `tokenId`, `price`, and `amount` values the API returns are **decimal strings** (not numbers) to avoid JavaScript `BigInt` precision loss. Parse them with `BigInt(value)` before passing to wagmi or viem.
 
 ## Conventions
 
@@ -75,6 +93,7 @@ Environment variables (read from `.env.local`):
 - `NEXT_PUBLIC_MARKETPLACE_ADDRESS` — populated after contract deploy
 - `NEXT_PUBLIC_OG_RPC_URL` — 0G Chain RPC
 - `NEXT_PUBLIC_OG_CHAIN_ID` — 0G Chain numeric ID
+- `NEXT_PUBLIC_API_URL` — base URL of the mnemos-backend REST API (e.g. `http://localhost:3001/api`)
 
 Anything prefixed `NEXT_PUBLIC_` is exposed to the browser; everything else is server-only. Never put a private key in `NEXT_PUBLIC_*`.
 
@@ -88,6 +107,11 @@ When iterating on contract changes:
 4. Restart `pnpm dev` so the env vars reload.
 
 When iterating on SDK changes: nothing to do here unless you're using `@mnemos/sdk` types. The frontend talks to chain directly through wagmi, not through the SDK.
+
+When iterating on backend API changes:
+1. If a response shape changes (added/removed field), update the fetch call and any TypeScript interface in the frontend.
+2. If the API moves or the port changes, update `NEXT_PUBLIC_API_URL` in `.env.local`.
+3. The API must be running for memory-load and provenance-detail features to work — add a graceful fallback or error state if `NEXT_PUBLIC_API_URL` is unset.
 
 ## When extending
 
