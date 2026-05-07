@@ -7,7 +7,18 @@ import { usePublicClient } from 'wagmi'
 import { formatEther } from 'viem'
 import { Skeleton } from '@/components/ui/skeleton'
 import { MARKETPLACE_ADDRESS, LISTED_EVENT } from '@/lib/contracts'
-import { DEMO_MODE, MOCK_LISTINGS } from '@/lib/mock-data'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api'
+
+interface StrategyMeta {
+  strategy?: string
+  category?: string
+  assets?: string[]
+  performance30d?: string
+  tags?: string[]
+  agentId?: string
+  version?: string
+}
 
 interface Listing {
   tokenId: string
@@ -16,23 +27,77 @@ interface Listing {
   rentPricePerDay: bigint
   forkPrice: bigint
   royaltyBps: number
+  meta?: StrategyMeta
+}
+
+async function fetchStrategyMeta(tokenId: string): Promise<StrategyMeta | null> {
+  try {
+    const res = await fetch(`${API_URL}/marketplace/listings/${tokenId}`, {
+      signal: AbortSignal.timeout(4000),
+    })
+    if (!res.ok) return null
+    const json = await res.json()
+    // Try to extract strategy metadata from various possible response shapes
+    const data = json.data ?? json
+    const metadata = json.metadata ?? json.meta ?? {}
+    return {
+      strategy: data.strategy ?? metadata.strategy ?? null,
+      category: data.category ?? metadata.category ?? null,
+      assets: data.assets ?? metadata.assets ?? null,
+      performance30d: data.performance30d ?? metadata.performance30d ?? null,
+      tags: data.tags ?? metadata.tags ?? null,
+      agentId: data.agentId ?? metadata.agentId ?? null,
+      version: data.version ?? metadata.version ?? null,
+    }
+  } catch {
+    return null
+  }
 }
 
 function truncate(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  trading: 'bg-violet-500/20 border-violet-500/30 text-violet-300',
+  yield: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300',
+  analytics: 'bg-blue-500/20 border-blue-500/30 text-blue-300',
+  nft: 'bg-pink-500/20 border-pink-500/30 text-pink-300',
+}
+
+function PerfBadge({ value }: { value: string }) {
+  const isPos = value.startsWith('+')
+  return (
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+      isPos
+        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+        : 'bg-red-500/15 border-red-500/30 text-red-400'
+    }`}>
+      {value} 30d
+    </span>
+  )
+}
+
 function ListingCard({ listing }: { listing: Listing }) {
+  const { meta } = listing
+  const catColor = meta?.category
+    ? (CATEGORY_COLORS[meta.category] ?? 'bg-white/10 border-white/20 text-white/50')
+    : ''
+
   return (
     <Link
       href={`/listing/${listing.tokenId}`}
-      className="group block glass-card rounded-2xl p-5 hover:border-violet-500/40 hover:bg-white/[0.08] transition-all duration-300"
+      className="group block glass-card rounded-2xl p-5 hover:border-violet-500/40 hover:bg-white/[0.08] transition-all duration-300 flex flex-col gap-3"
     >
-      <div className="flex items-start justify-between gap-2 mb-4">
-        <span className="text-xs font-mono text-white/40">
-          #{listing.tokenId}
-        </span>
-        <div className="flex gap-1.5 flex-wrap justify-end">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-[10px] font-mono text-white/30">#{listing.tokenId}</span>
+        <div className="flex gap-1 flex-wrap justify-end">
+          {meta?.category && (
+            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium capitalize ${catColor}`}>
+              {meta.category}
+            </span>
+          )}
           {listing.buyPrice > 0n && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 font-medium">
               sale
@@ -51,10 +116,37 @@ function ListingCard({ listing }: { listing: Listing }) {
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      {/* Strategy title */}
+      <div>
+        <h3 className="text-sm font-semibold text-white leading-snug group-hover:text-violet-200 transition-colors line-clamp-2">
+          {meta?.strategy ?? `Memory Token #${listing.tokenId}`}
+        </h3>
+        {meta?.agentId && (
+          <p className="text-[10px] text-white/30 mt-0.5 font-mono">
+            {meta.agentId}{meta.version ? ` · v${meta.version}` : ''}
+          </p>
+        )}
+      </div>
+
+      {/* Assets + performance */}
+      {(meta?.assets?.length || meta?.performance30d) && (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-1 flex-wrap">
+            {meta.assets?.map((a) => (
+              <span key={a} className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/50 font-mono">
+                {a}
+              </span>
+            ))}
+          </div>
+          {meta.performance30d && <PerfBadge value={meta.performance30d} />}
+        </div>
+      )}
+
+      {/* Prices */}
+      <div className="space-y-1">
         {listing.buyPrice > 0n && (
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-white/40">Buy</span>
+            <span className="text-[11px] text-white/40">Buy</span>
             <span className="text-sm font-semibold text-white group-hover:text-violet-300 transition-colors">
               {formatEther(listing.buyPrice)} A0GI
             </span>
@@ -62,16 +154,30 @@ function ListingCard({ listing }: { listing: Listing }) {
         )}
         {listing.rentPricePerDay > 0n && (
           <div className="flex items-baseline justify-between">
-            <span className="text-xs text-white/40">Rent/day</span>
-            <span className="text-sm font-medium text-white/80">
+            <span className="text-[11px] text-white/40">Rent/day</span>
+            <span className="text-sm font-medium text-white/70">
               {formatEther(listing.rentPricePerDay)} A0GI
+            </span>
+          </div>
+        )}
+        {listing.forkPrice > 0n && (
+          <div className="flex items-baseline justify-between">
+            <span className="text-[11px] text-white/40">Fork</span>
+            <span className="text-sm font-medium text-white/70">
+              {formatEther(listing.forkPrice)} A0GI
             </span>
           </div>
         )}
       </div>
 
-      <div className="mt-4 pt-3 border-t border-white/10">
-        <span className="text-[11px] font-mono text-white/30">
+      {/* Tags + seller */}
+      <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
+        <div className="flex gap-1 flex-wrap">
+          {meta?.tags?.slice(0, 2).map((t) => (
+            <span key={t} className="text-[9px] text-white/20 font-mono">#{t}</span>
+          ))}
+        </div>
+        <span className="text-[10px] font-mono text-white/25 shrink-0">
           {truncate(listing.seller)}
         </span>
       </div>
@@ -83,11 +189,19 @@ function ListingCardSkeleton() {
   return (
     <div className="glass-card rounded-2xl p-5 space-y-4">
       <div className="flex justify-between">
-        <Skeleton className="h-3 w-10 bg-white/10" />
-        <Skeleton className="h-4 w-16 bg-white/10" />
+        <Skeleton className="h-3 w-8 bg-white/10" />
+        <Skeleton className="h-4 w-20 bg-white/10" />
       </div>
       <Skeleton className="h-4 w-full bg-white/10" />
-      <Skeleton className="h-4 w-3/4 bg-white/10" />
+      <Skeleton className="h-3 w-3/4 bg-white/10" />
+      <div className="flex gap-1">
+        <Skeleton className="h-5 w-10 bg-white/10" />
+        <Skeleton className="h-5 w-12 bg-white/10" />
+      </div>
+      <div className="space-y-1.5">
+        <Skeleton className="h-3 w-full bg-white/10" />
+        <Skeleton className="h-3 w-3/4 bg-white/10" />
+      </div>
       <div className="pt-3 border-t border-white/10">
         <Skeleton className="h-3 w-24 bg-white/10" />
       </div>
@@ -102,7 +216,6 @@ function MarketplaceContent() {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDemo, setIsDemo] = useState(false)
 
   useEffect(() => {
     if (!publicClient || !MARKETPLACE_ADDRESS) {
@@ -140,9 +253,19 @@ function MarketplaceContent() {
         }
 
         const onChain = Array.from(seen.values()).reverse()
-        const usingMock = onChain.length === 0 && DEMO_MODE
-        setListings(usingMock ? MOCK_LISTINGS : onChain)
-        setIsDemo(usingMock)
+        if (!cancelled) setListings(onChain)
+
+        // Fetch strategy metadata from API in background for each listing
+        const metaResults = await Promise.allSettled(
+          onChain.map((l) => fetchStrategyMeta(l.tokenId)),
+        )
+        if (!cancelled) {
+          setListings(onChain.map((l, i) => {
+            const result = metaResults[i]
+            const meta = result.status === 'fulfilled' ? result.value ?? undefined : undefined
+            return { ...l, meta }
+          }))
+        }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load listings')
@@ -177,12 +300,6 @@ function MarketplaceContent() {
               {filtered.length} listing{filtered.length !== 1 ? 's' : ''}
               {category ? ` · ${category}` : ''}
             </p>
-          )}
-          {isDemo && (
-            <span className="inline-flex items-center gap-1.5 mt-2 text-[11px] px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Demo mode — showing sample data
-            </span>
           )}
         </div>
 

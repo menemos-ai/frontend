@@ -15,6 +15,7 @@ import {
 } from '@/lib/contracts'
 import type { MemoryInfo, ListingInfo } from '@/lib/api'
 import { DEMO_MODE, MOCK_MEMORY_INFO, MOCK_LISTING_INFO } from '@/lib/mock-data'
+import { ogChain } from '@/lib/wagmi'
 
 function truncate(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`
@@ -105,16 +106,27 @@ function BuyPanel({
         </span>
       </div>
       {txHash && (
-        <p className="text-xs text-violet-400 font-mono break-all bg-violet-500/10 rounded-lg p-2">
-          Tx: {truncate(txHash)}
-        </p>
+        <div className="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="text-xs text-emerald-400 font-medium">Purchase confirmed</span>
+          </div>
+          <a
+            href={`${ogChain.blockExplorers.default.url}/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-mono text-emerald-400/70 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+          >
+            {truncate(txHash)} ↗
+          </a>
+        </div>
       )}
       <Button
         onClick={handleBuy}
         disabled={pending}
         className="w-full btn-glow text-white rounded-xl h-10"
       >
-        {pending ? 'Buying…' : 'Buy Now'}
+        {pending ? 'Buying…' : txHash ? 'Bought ✓' : 'Buy Now'}
       </Button>
     </div>
   )
@@ -175,6 +187,12 @@ function RentPanel({
     }
   }
 
+  const expiryDate = txHash
+    ? new Date(Date.now() + daysNum * 86400 * 1000).toLocaleDateString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+      })
+    : null
+
   return (
     <div className="glass-card rounded-2xl p-5 space-y-4">
       <h3 className="text-sm font-semibold text-white">Rent</h3>
@@ -204,16 +222,31 @@ function RentPanel({
         </span>
       </div>
       {txHash && (
-        <p className="text-xs text-violet-400 font-mono break-all bg-violet-500/10 rounded-lg p-2">
-          Tx: {truncate(txHash)}
-        </p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-xs text-emerald-400 font-medium">
+                Active · expires {expiryDate}
+              </span>
+            </div>
+            <a
+              href={`${ogChain.blockExplorers.default.url}/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-mono text-emerald-400/70 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+            >
+              {truncate(txHash)} ↗
+            </a>
+          </div>
+        </div>
       )}
       <Button
         onClick={handleRent}
-        disabled={pending}
+        disabled={pending || !!txHash}
         className="w-full btn-glow text-white rounded-xl h-10"
       >
-        {pending ? 'Renting…' : 'Rent Now'}
+        {pending ? 'Renting…' : txHash ? 'Rental Active ✓' : 'Rent Now'}
       </Button>
     </div>
   )
