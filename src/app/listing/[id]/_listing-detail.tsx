@@ -65,13 +65,23 @@ function BuyPanel({
     )
   }
 
+  if (!MARKETPLACE_ADDRESS) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-sm font-medium text-muted-foreground mb-1">Buy</h3>
+        <p className="text-xs text-muted-foreground">Contract not configured.</p>
+      </div>
+    )
+  }
+
+  const marketplaceAddr = MARKETPLACE_ADDRESS
   const price = BigInt(listing.price)
 
   async function handleBuy() {
     setPending(true)
     try {
       const hash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
+        address: marketplaceAddr,
         abi: MARKETPLACE_ABI,
         functionName: 'buyMemory',
         args: [tokenId],
@@ -135,6 +145,16 @@ function RentPanel({
     )
   }
 
+  if (!MARKETPLACE_ADDRESS) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-sm font-medium text-muted-foreground mb-1">Rent</h3>
+        <p className="text-xs text-muted-foreground">Contract not configured.</p>
+      </div>
+    )
+  }
+
+  const marketplaceAddr = MARKETPLACE_ADDRESS
   const ratePerDay = BigInt(listing.rentalPricePerDay)
   const daysNum = Math.max(1, parseInt(days, 10) || 1)
   const total = ratePerDay * BigInt(daysNum)
@@ -143,7 +163,7 @@ function RentPanel({
     setPending(true)
     try {
       const hash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
+        address: marketplaceAddr,
         abi: MARKETPLACE_ABI,
         functionName: 'rentMemory',
         args: [tokenId, BigInt(daysNum)],

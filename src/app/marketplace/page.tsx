@@ -119,12 +119,13 @@ function MarketplaceContent() {
       return
     }
 
+    const marketplaceAddress = MARKETPLACE_ADDRESS
     let cancelled = false
 
     async function scanListings() {
       try {
         const logs = await publicClient!.getLogs({
-          address: MARKETPLACE_ADDRESS,
+          address: marketplaceAddress,
           event: MARKETPLACE_ABI[0],
           fromBlock: 0n,
           toBlock: 'latest',

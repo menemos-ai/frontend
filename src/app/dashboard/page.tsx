@@ -53,27 +53,29 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
 
   async function handleList(e: React.FormEvent) {
     e.preventDefault()
-    if (!address || !publicClient) return
+    if (!address || !publicClient || !REGISTRY_ADDRESS || !MARKETPLACE_ADDRESS) return
 
+    const registryAddress = REGISTRY_ADDRESS
+    const marketplaceAddress = MARKETPLACE_ADDRESS
     setPending(true)
     setStatus(null)
 
     try {
       // Approval step: check and request setApprovalForAll before list()
       const approved = await publicClient.readContract({
-        address: REGISTRY_ADDRESS,
+        address: registryAddress,
         abi: REGISTRY_ABI,
         functionName: 'isApprovedForAll',
-        args: [address, MARKETPLACE_ADDRESS],
+        args: [address, marketplaceAddress],
       })
 
       if (!approved) {
         setStatus('Approving marketplace…')
         const approvalHash = await writeContractAsync({
-          address: REGISTRY_ADDRESS,
+          address: registryAddress,
           abi: REGISTRY_ABI,
           functionName: 'setApprovalForAll',
-          args: [MARKETPLACE_ADDRESS, true],
+          args: [marketplaceAddress, true],
         })
         await publicClient.waitForTransactionReceipt({ hash: approvalHash })
       }
@@ -83,7 +85,7 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
       const rentalWei = parseEther(rentalPricePerDay || '0')
 
       const listHash = await writeContractAsync({
-        address: MARKETPLACE_ADDRESS,
+        address: marketplaceAddress,
         abi: MARKETPLACE_ABI,
         functionName: 'list',
         args: [
@@ -270,12 +272,13 @@ export default function DashboardPage() {
       return
     }
 
+    const registryAddress = REGISTRY_ADDRESS
     let cancelled = false
 
     async function scanMinted() {
       try {
         const logs = await publicClient!.getLogs({
-          address: REGISTRY_ADDRESS,
+          address: registryAddress,
           event: REGISTRY_ABI[0],
           fromBlock: 0n,
           toBlock: 'latest',

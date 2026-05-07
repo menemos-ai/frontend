@@ -1,8 +1,15 @@
-export const REGISTRY_ADDRESS = process.env
-  .NEXT_PUBLIC_REGISTRY_ADDRESS as `0x${string}`
+function requireAddress(raw: string | undefined): `0x${string}` | undefined {
+  if (!raw || raw.length !== 42 || !raw.startsWith('0x')) return undefined
+  return raw as `0x${string}`
+}
 
-export const MARKETPLACE_ADDRESS = process.env
-  .NEXT_PUBLIC_MARKETPLACE_ADDRESS as `0x${string}`
+export const REGISTRY_ADDRESS = requireAddress(
+  process.env.NEXT_PUBLIC_REGISTRY_ADDRESS,
+)
+
+export const MARKETPLACE_ADDRESS = requireAddress(
+  process.env.NEXT_PUBLIC_MARKETPLACE_ADDRESS,
+)
 
 // Minimal ABI — only functions the UI calls. Keep additive; never remove entries.
 export const REGISTRY_ABI = [
