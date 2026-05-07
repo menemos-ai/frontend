@@ -5,67 +5,60 @@ export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
 export interface MockListing {
   tokenId: string
   seller: string
-  price: bigint
-  rentalPricePerDay: bigint
-  isForSale: boolean
-  isForRent: boolean
-  isForFork: boolean
+  buyPrice: bigint
+  rentPricePerDay: bigint
+  forkPrice: bigint
+  royaltyBps: number
 }
 
 export const MOCK_LISTINGS: MockListing[] = [
   {
     tokenId: '1',
     seller: '0x742d35Cc6634C0532925a3b8D4C9c5e9C8b5F0a1',
-    price: BigInt('500000000000000000'),       // 0.5 A0GI
-    rentalPricePerDay: BigInt('50000000000000000'), // 0.05 A0GI/day
-    isForSale: true,
-    isForRent: true,
-    isForFork: false,
+    buyPrice: BigInt('500000000000000000'),        // 0.5 A0GI
+    rentPricePerDay: BigInt('50000000000000000'),  // 0.05 A0GI/day
+    forkPrice: BigInt('0'),
+    royaltyBps: 0,
   },
   {
     tokenId: '2',
     seller: '0x8ba1f109551bD432803012645Hac136c9C8cF0a2',
-    price: BigInt('1200000000000000000'),      // 1.2 A0GI
-    rentalPricePerDay: BigInt('0'),
-    isForSale: true,
-    isForRent: false,
-    isForFork: true,
+    buyPrice: BigInt('1200000000000000000'),       // 1.2 A0GI
+    rentPricePerDay: BigInt('0'),
+    forkPrice: BigInt('100000000000000000'),       // 0.1 A0GI to fork
+    royaltyBps: 500,
   },
   {
     tokenId: '3',
     seller: '0xdD870fA1b7C4700F2BD7f44238821C26f7392148',
-    price: BigInt('0'),
-    rentalPricePerDay: BigInt('20000000000000000'), // 0.02 A0GI/day
-    isForSale: false,
-    isForRent: true,
-    isForFork: false,
+    buyPrice: BigInt('0'),
+    rentPricePerDay: BigInt('20000000000000000'), // 0.02 A0GI/day
+    forkPrice: BigInt('0'),
+    royaltyBps: 0,
   },
   {
     tokenId: '4',
     seller: '0x742d35Cc6634C0532925a3b8D4C9c5e9C8b5F0a1',
-    price: BigInt('300000000000000000'),       // 0.3 A0GI
-    rentalPricePerDay: BigInt('30000000000000000'), // 0.03 A0GI/day
-    isForSale: true,
-    isForRent: true,
-    isForFork: true,
+    buyPrice: BigInt('300000000000000000'),        // 0.3 A0GI
+    rentPricePerDay: BigInt('30000000000000000'), // 0.03 A0GI/day
+    forkPrice: BigInt('50000000000000000'),        // 0.05 A0GI to fork
+    royaltyBps: 1000,
   },
   {
     tokenId: '5',
     seller: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-    price: BigInt('2000000000000000000'),      // 2.0 A0GI
-    rentalPricePerDay: BigInt('0'),
-    isForSale: true,
-    isForRent: false,
-    isForFork: false,
+    buyPrice: BigInt('2000000000000000000'),       // 2.0 A0GI
+    rentPricePerDay: BigInt('0'),
+    forkPrice: BigInt('0'),
+    royaltyBps: 0,
   },
   {
     tokenId: '6',
     seller: '0x8ba1f109551bD432803012645Hac136c9C8cF0a2',
-    price: BigInt('0'),
-    rentalPricePerDay: BigInt('10000000000000000'), // 0.01 A0GI/day
-    isForSale: false,
-    isForRent: true,
-    isForFork: true,
+    buyPrice: BigInt('0'),
+    rentPricePerDay: BigInt('10000000000000000'), // 0.01 A0GI/day
+    forkPrice: BigInt('80000000000000000'),        // 0.08 A0GI to fork
+    royaltyBps: 750,
   },
 ]
 
@@ -142,62 +135,50 @@ export const MOCK_TOKENS: MockToken[] = [
 export const MOCK_LISTING_INFO: Record<string, ListingInfo> = {
   '1': {
     tokenId: '1',
-    price: '500000000000000000',
-    rentalPricePerDay: '50000000000000000',
-    isForSale: true,
-    isForRent: true,
-    isForFork: false,
-    forkRoyaltyBps: 0,
     seller: '0x742d35Cc6634C0532925a3b8D4C9c5e9C8b5F0a1',
+    buyPrice: '500000000000000000',
+    rentPricePerDay: '50000000000000000',
+    forkPrice: '0',
+    royaltyBps: 0,
   },
   '2': {
     tokenId: '2',
-    price: '1200000000000000000',
-    rentalPricePerDay: '0',
-    isForSale: true,
-    isForRent: false,
-    isForFork: true,
-    forkRoyaltyBps: 500,
     seller: '0x8ba1f109551bD432803012645Hac136c9C8cF0a2',
+    buyPrice: '1200000000000000000',
+    rentPricePerDay: '0',
+    forkPrice: '100000000000000000',
+    royaltyBps: 500,
   },
   '3': {
     tokenId: '3',
-    price: '0',
-    rentalPricePerDay: '20000000000000000',
-    isForSale: false,
-    isForRent: true,
-    isForFork: false,
-    forkRoyaltyBps: 0,
     seller: '0xdD870fA1b7C4700F2BD7f44238821C26f7392148',
+    buyPrice: '0',
+    rentPricePerDay: '20000000000000000',
+    forkPrice: '0',
+    royaltyBps: 0,
   },
   '4': {
     tokenId: '4',
-    price: '300000000000000000',
-    rentalPricePerDay: '30000000000000000',
-    isForSale: true,
-    isForRent: true,
-    isForFork: true,
-    forkRoyaltyBps: 1000,
     seller: '0x742d35Cc6634C0532925a3b8D4C9c5e9C8b5F0a1',
+    buyPrice: '300000000000000000',
+    rentPricePerDay: '30000000000000000',
+    forkPrice: '50000000000000000',
+    royaltyBps: 1000,
   },
   '5': {
     tokenId: '5',
-    price: '2000000000000000000',
-    rentalPricePerDay: '0',
-    isForSale: true,
-    isForRent: false,
-    isForFork: false,
-    forkRoyaltyBps: 0,
     seller: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+    buyPrice: '2000000000000000000',
+    rentPricePerDay: '0',
+    forkPrice: '0',
+    royaltyBps: 0,
   },
   '6': {
     tokenId: '6',
-    price: '0',
-    rentalPricePerDay: '10000000000000000',
-    isForSale: false,
-    isForRent: true,
-    isForFork: true,
-    forkRoyaltyBps: 750,
     seller: '0x8ba1f109551bD432803012645Hac136c9C8cF0a2',
+    buyPrice: '0',
+    rentPricePerDay: '10000000000000000',
+    forkPrice: '80000000000000000',
+    royaltyBps: 750,
   },
 }
