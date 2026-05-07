@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react'
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi'
-import { parseEther, formatEther } from 'viem'
+import { formatEther } from 'viem'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
