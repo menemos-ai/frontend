@@ -12,13 +12,11 @@ export interface MemoryInfo {
 
 export interface ListingInfo {
   tokenId: string
-  price: string
-  rentalPricePerDay: string
-  isForSale: boolean
-  isForRent: boolean
-  isForFork: boolean
-  forkRoyaltyBps: number
   seller: string
+  buyPrice: string        // "0" = not for sale
+  rentPricePerDay: string // "0" = not for rent
+  forkPrice: string       // "0" = not for fork
+  royaltyBps: number
 }
 
 export interface MemoryBundle {

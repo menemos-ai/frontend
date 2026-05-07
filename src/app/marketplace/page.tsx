@@ -6,17 +6,16 @@ import { useSearchParams } from 'next/navigation'
 import { usePublicClient } from 'wagmi'
 import { formatEther } from 'viem'
 import { Skeleton } from '@/components/ui/skeleton'
-import { MARKETPLACE_ADDRESS, MARKETPLACE_ABI } from '@/lib/contracts'
+import { MARKETPLACE_ADDRESS, LISTED_EVENT } from '@/lib/contracts'
 import { DEMO_MODE, MOCK_LISTINGS } from '@/lib/mock-data'
 
 interface Listing {
   tokenId: string
   seller: string
-  price: bigint
-  rentalPricePerDay: bigint
-  isForSale: boolean
-  isForRent: boolean
-  isForFork: boolean
+  buyPrice: bigint
+  rentPricePerDay: bigint
+  forkPrice: bigint
+  royaltyBps: number
 }
 
 function truncate(addr: string) {
@@ -34,17 +33,17 @@ function ListingCard({ listing }: { listing: Listing }) {
           #{listing.tokenId}
         </span>
         <div className="flex gap-1.5 flex-wrap justify-end">
-          {listing.isForSale && (
+          {listing.buyPrice > 0n && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-300 font-medium">
               sale
             </span>
           )}
-          {listing.isForRent && (
+          {listing.rentPricePerDay > 0n && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 font-medium">
               rent
             </span>
           )}
-          {listing.isForFork && (
+          {listing.forkPrice > 0n && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-300 font-medium">
               fork
             </span>
@@ -53,19 +52,19 @@ function ListingCard({ listing }: { listing: Listing }) {
       </div>
 
       <div className="space-y-1.5">
-        {listing.isForSale && (
+        {listing.buyPrice > 0n && (
           <div className="flex items-baseline justify-between">
             <span className="text-xs text-white/40">Buy</span>
             <span className="text-sm font-semibold text-white group-hover:text-violet-300 transition-colors">
-              {formatEther(listing.price)} A0GI
+              {formatEther(listing.buyPrice)} A0GI
             </span>
           </div>
         )}
-        {listing.isForRent && (
+        {listing.rentPricePerDay > 0n && (
           <div className="flex items-baseline justify-between">
             <span className="text-xs text-white/40">Rent/day</span>
             <span className="text-sm font-medium text-white/80">
-              {formatEther(listing.rentalPricePerDay)} A0GI
+              {formatEther(listing.rentPricePerDay)} A0GI
             </span>
           </div>
         )}
@@ -118,7 +117,7 @@ function MarketplaceContent() {
       try {
         const logs = await publicClient!.getLogs({
           address: marketplaceAddress,
-          event: MARKETPLACE_ABI[0],
+          event: LISTED_EVENT,
           fromBlock: 0n,
           toBlock: 'latest',
           strict: true,
@@ -133,11 +132,10 @@ function MarketplaceContent() {
           seen.set(tokenId, {
             tokenId,
             seller: args.seller!,
-            price: args.price!,
-            rentalPricePerDay: args.rentalPricePerDay!,
-            isForSale: args.isForSale!,
-            isForRent: args.isForRent!,
-            isForFork: args.isForFork!,
+            buyPrice: args.buyPrice!,
+            rentPricePerDay: args.rentPricePerDay!,
+            forkPrice: args.forkPrice!,
+            royaltyBps: Number(args.royaltyBps!),
           })
         }
 
@@ -160,9 +158,9 @@ function MarketplaceContent() {
 
   const filtered = category
     ? listings.filter((l) => {
-        if (category === 'sale') return l.isForSale
-        if (category === 'rent') return l.isForRent
-        if (category === 'fork') return l.isForFork
+        if (category === 'sale') return l.buyPrice > 0n
+        if (category === 'rent') return l.rentPricePerDay > 0n
+        if (category === 'fork') return l.forkPrice > 0n
         return true
       })
     : listings

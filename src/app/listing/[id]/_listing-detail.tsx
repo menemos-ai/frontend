@@ -55,7 +55,7 @@ function BuyPanel({
   const [pending, setPending] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
 
-  if (!listing.isForSale) {
+  if (BigInt(listing.buyPrice) === 0n) {
     return (
       <div className="glass-card rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-white/40 mb-1">Buy</h3>
@@ -74,7 +74,7 @@ function BuyPanel({
   }
 
   const marketplaceAddr = MARKETPLACE_ADDRESS
-  const price = BigInt(listing.price)
+  const price = BigInt(listing.buyPrice)
 
   async function handleBuy() {
     setPending(true)
@@ -82,7 +82,7 @@ function BuyPanel({
       const hash = await writeContractAsync({
         address: marketplaceAddr,
         abi: MARKETPLACE_ABI,
-        functionName: 'buyMemory',
+        functionName: 'buy',
         args: [tokenId],
         value: price,
       })
@@ -133,7 +133,7 @@ function RentPanel({
   const [pending, setPending] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
 
-  if (!listing.isForRent) {
+  if (BigInt(listing.rentPricePerDay) === 0n) {
     return (
       <div className="glass-card rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-white/40 mb-1">Rent</h3>
@@ -152,7 +152,7 @@ function RentPanel({
   }
 
   const marketplaceAddr = MARKETPLACE_ADDRESS
-  const ratePerDay = BigInt(listing.rentalPricePerDay)
+  const ratePerDay = BigInt(listing.rentPricePerDay)
   const daysNum = Math.max(1, parseInt(days, 10) || 1)
   const total = ratePerDay * BigInt(daysNum)
 
@@ -162,7 +162,7 @@ function RentPanel({
       const hash = await writeContractAsync({
         address: marketplaceAddr,
         abi: MARKETPLACE_ABI,
-        functionName: 'rentMemory',
+        functionName: 'rent',
         args: [tokenId, BigInt(daysNum)],
         value: total,
       })
@@ -220,21 +220,20 @@ function RentPanel({
 }
 
 function ForkPanel({ listing }: { listing: ListingInfo }) {
+  const isForFork = BigInt(listing.forkPrice) > 0n
   return (
     <div className="glass-card rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3
-          className={`text-sm font-semibold ${listing.isForFork ? 'text-white' : 'text-white/40'}`}
-        >
+        <h3 className={`text-sm font-semibold ${isForFork ? 'text-white' : 'text-white/40'}`}>
           Fork
         </h3>
-        {listing.isForFork && (
+        {isForFork && (
           <span className="text-[10px] px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-300 font-medium">
-            {(listing.forkRoyaltyBps / 100).toFixed(2)}% royalty
+            {(listing.royaltyBps / 100).toFixed(2)}% royalty
           </span>
         )}
       </div>
-      {listing.isForFork ? (
+      {isForFork ? (
         <p className="text-xs text-white/40">
           Forking requires uploading a child memory bundle via the SDK.
         </p>
@@ -296,7 +295,7 @@ export function ListingDetail({ id }: { id: string }) {
         publicClient.readContract({
           address: REGISTRY_ADDRESS,
           abi: REGISTRY_ABI,
-          functionName: 'getMemoryInfo',
+          functionName: 'getSnapshot',
           args: [tokenId],
         }),
         publicClient.readContract({
@@ -307,25 +306,38 @@ export function ListingDetail({ id }: { id: string }) {
         }),
       ])
 
-      // viem returns a readonly tuple for multi-output functions — access by index
+      // getSnapshot returns a named struct — access by property name
+      const snap = memResult as unknown as {
+        contentHash: `0x${string}`
+        storageURI: string
+        parentTokenId: bigint
+        creator: `0x${string}`
+        createdAt: bigint
+      }
       const memInfo: MemoryInfo = {
         tokenId: id,
-        contentHash: memResult[0],
-        storageUri: memResult[1],
-        creator: memResult[2],
-        parent: memResult[3] === 0n ? null : memResult[3].toString(),
-        timestamp: memResult[4].toString(),
+        contentHash: snap.contentHash,
+        storageUri: snap.storageURI,
+        parent: snap.parentTokenId === 0n ? null : snap.parentTokenId.toString(),
+        creator: snap.creator,
+        timestamp: snap.createdAt.toString(),
       }
 
+      // getListing returns a named struct — access by property name
+      const lst = listResult as unknown as {
+        seller: `0x${string}`
+        buyPrice: bigint
+        rentPricePerDay: bigint
+        forkPrice: bigint
+        royaltyBps: number
+      }
       const listInfo: ListingInfo = {
         tokenId: id,
-        price: listResult[0].toString(),
-        rentalPricePerDay: listResult[1].toString(),
-        isForSale: listResult[2],
-        isForRent: listResult[3],
-        isForFork: listResult[4],
-        forkRoyaltyBps: Number(listResult[5]),
-        seller: listResult[6],
+        seller: lst.seller,
+        buyPrice: lst.buyPrice.toString(),
+        rentPricePerDay: lst.rentPricePerDay.toString(),
+        forkPrice: lst.forkPrice.toString(),
+        royaltyBps: Number(lst.royaltyBps),
       }
 
       if (!cancelled) {

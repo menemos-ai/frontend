@@ -6,7 +6,6 @@ import { parseEther } from 'viem'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Slider } from '@/components/ui/slider'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -14,8 +13,10 @@ import {
   REGISTRY_ABI,
   MARKETPLACE_ADDRESS,
   MARKETPLACE_ABI,
+  MEMORY_MINTED_EVENT,
 } from '@/lib/contracts'
 import { DEMO_MODE, MOCK_TOKENS } from '@/lib/mock-data'
+import { ogChain } from '@/lib/wagmi'
 
 interface MintedToken {
   tokenId: string
@@ -41,13 +42,12 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
   const { writeContractAsync } = useWriteContract()
   const publicClient = usePublicClient()
 
-  const [price, setPrice] = useState('')
+  const [buyPrice, setBuyPrice] = useState('')
   const [rentalPricePerDay, setRentalPricePerDay] = useState('')
-  const [isForSale, setIsForSale] = useState(true)
-  const [isForRent, setIsForRent] = useState(false)
-  const [isForFork, setIsForFork] = useState(false)
+  const [forkPrice, setForkPrice] = useState('')
   const [forkRoyaltyBps, setForkRoyaltyBps] = useState(500)
   const [status, setStatus] = useState<string | null>(null)
+  const [txHash, setTxHash] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
   async function handleList(e: React.FormEvent) {
@@ -75,29 +75,31 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
           functionName: 'setApprovalForAll',
           args: [marketplaceAddress, true],
         })
-        await publicClient.waitForTransactionReceipt({ hash: approvalHash })
+        await publicClient.waitForTransactionReceipt({ hash: approvalHash, timeout: 120_000, retryCount: 30, retryDelay: 3_000 })
+      }
+
+      const buyPriceWei = parseEther(buyPrice || '0')
+      const rentalWei = parseEther(rentalPricePerDay || '0')
+      const forkPriceWei = parseEther(forkPrice || '0')
+      const royaltyBpsValue = forkPriceWei > 0n ? BigInt(forkRoyaltyBps) : 0n
+
+      if (buyPriceWei === 0n && rentalWei === 0n && forkPriceWei === 0n) {
+        setStatus('Error: Set at least one price greater than 0.')
+        setPending(false)
+        return
       }
 
       setStatus('Listing…')
-      const priceWei = parseEther(price || '0')
-      const rentalWei = parseEther(rentalPricePerDay || '0')
 
       const listHash = await writeContractAsync({
         address: marketplaceAddress,
         abi: MARKETPLACE_ABI,
         functionName: 'list',
-        args: [
-          BigInt(tokenId),
-          priceWei,
-          rentalWei,
-          isForSale,
-          isForRent,
-          isForFork,
-          BigInt(forkRoyaltyBps),
-        ],
+        args: [BigInt(tokenId), buyPriceWei, rentalWei, forkPriceWei, royaltyBpsValue],
       })
-      await publicClient.waitForTransactionReceipt({ hash: listHash })
-      setStatus('Listed! Reload to see updated status.')
+      await publicClient.waitForTransactionReceipt({ hash: listHash, timeout: 120_000, retryCount: 30, retryDelay: 3_000 })
+      setTxHash(listHash)
+      setStatus('Listed successfully!')
       onSuccess()
     } catch (err) {
       setStatus(
@@ -110,19 +112,19 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
 
   return (
     <form onSubmit={handleList} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor={`price-${tokenId}`} className="text-xs text-white/50">
+          <Label htmlFor={`buyprice-${tokenId}`} className="text-xs text-white/50">
             Buy price (A0GI)
           </Label>
           <Input
-            id={`price-${tokenId}`}
+            id={`buyprice-${tokenId}`}
             type="number"
             min="0"
             step="0.001"
-            placeholder="0.1"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            placeholder="0 = not for sale"
+            value={buyPrice}
+            onChange={(e) => setBuyPrice(e.target.value)}
             className="h-8 text-sm bg-white/5 border-white/15 text-white placeholder:text-white/30 focus-visible:ring-violet-500/50"
           />
         </div>
@@ -135,75 +137,60 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
             type="number"
             min="0"
             step="0.001"
-            placeholder="0.01"
+            placeholder="0 = not for rent"
             value={rentalPricePerDay}
             onChange={(e) => setRentalPricePerDay(e.target.value)}
             className="h-8 text-sm bg-white/5 border-white/15 text-white placeholder:text-white/30 focus-visible:ring-violet-500/50"
           />
         </div>
-      </div>
-
-      <div className="flex items-center gap-5">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`sale-${tokenId}`}
-            checked={isForSale}
-            onCheckedChange={(v) => setIsForSale(!!v)}
-            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
-          />
-          <Label htmlFor={`sale-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
-            For sale
+        <div className="space-y-1.5">
+          <Label htmlFor={`forkprice-${tokenId}`} className="text-xs text-white/50">
+            Fork price (A0GI)
           </Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`rent-${tokenId}`}
-            checked={isForRent}
-            onCheckedChange={(v) => setIsForRent(!!v)}
-            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
+          <Input
+            id={`forkprice-${tokenId}`}
+            type="number"
+            min="0"
+            step="0.001"
+            placeholder="0 = not for fork"
+            value={forkPrice}
+            onChange={(e) => setForkPrice(e.target.value)}
+            className="h-8 text-sm bg-white/5 border-white/15 text-white placeholder:text-white/30 focus-visible:ring-violet-500/50"
           />
-          <Label htmlFor={`rent-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
-            For rent
-          </Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`fork-${tokenId}`}
-            checked={isForFork}
-            onCheckedChange={(v) => setIsForFork(!!v)}
-            className="border-white/30 data-[state=checked]:bg-violet-600 data-[state=checked]:border-violet-600"
-          />
-          <Label htmlFor={`fork-${tokenId}`} className="text-xs text-white/70 cursor-pointer">
-            For fork
-          </Label>
         </div>
       </div>
 
-      {isForFork && (
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <Label className="text-xs text-white/50">Fork royalty</Label>
-            <span className="text-xs text-white/80">
-              {(forkRoyaltyBps / 100).toFixed(2)}%
-            </span>
-          </div>
-          <Slider
-            min={0}
-            max={5000}
-            step={1}
-            value={[forkRoyaltyBps]}
-            onValueChange={([v]) => setForkRoyaltyBps(v)}
-            className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-400"
-          />
+      <div className="space-y-2">
+        <div className="flex justify-between">
+          <Label className="text-xs text-white/50">Fork royalty</Label>
+          <span className="text-xs text-white/80">
+            {(forkRoyaltyBps / 100).toFixed(2)}%
+          </span>
         </div>
-      )}
+        <Slider
+          min={0}
+          max={5000}
+          step={1}
+          value={[forkRoyaltyBps]}
+          onValueChange={([v]) => setForkRoyaltyBps(v)}
+          className="[&_[role=slider]]:bg-violet-500 [&_[role=slider]]:border-violet-400"
+        />
+      </div>
 
       {status && (
-        <p
-          className={`text-xs ${status.startsWith('Error') ? 'text-red-400' : 'text-violet-400'}`}
-        >
-          {status}
-        </p>
+        <div className={`text-xs ${status.startsWith('Error') ? 'text-red-400' : 'text-violet-400'}`}>
+          <span>{status}</span>
+          {txHash && (
+            <a
+              href={`${ogChain.blockExplorers.default.url}/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 underline underline-offset-2 hover:text-violet-300"
+            >
+              View on Explorer →
+            </a>
+          )}
+        </div>
       )}
 
       <Button
@@ -285,7 +272,7 @@ export default function DashboardPage() {
       try {
         const logs = await publicClient!.getLogs({
           address: registryAddress,
-          event: REGISTRY_ABI[0],
+          event: MEMORY_MINTED_EVENT,
           fromBlock: 0n,
           toBlock: 'latest',
           args: { creator: address },
