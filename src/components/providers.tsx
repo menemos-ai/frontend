@@ -1,19 +1,22 @@
 'use client'
 
-import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
+import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
-import { WagmiProvider, type State } from 'wagmi'
-import { wagmiConfig } from '@/lib/wagmi'
+import { WagmiProvider, cookieStorage, createStorage } from 'wagmi'
+import { ogTestnet } from '@/lib/wagmi'
 
 import '@rainbow-me/rainbowkit/styles.css'
 
-interface ProvidersProps {
-  children: ReactNode
-  initialState?: State
-}
+export const wagmiConfig = getDefaultConfig({
+  appName: 'Mnemos Marketplace',
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? 'mnemos-dev',
+  chains: [ogTestnet],
+  ssr: true,
+  storage: createStorage({ storage: cookieStorage }),
+})
 
-export function Providers({ children, initialState }: ProvidersProps) {
+export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -22,11 +25,11 @@ export function Providers({ children, initialState }: ProvidersProps) {
   )
 
   return (
-    <WagmiProvider config={wagmiConfig} initialState={initialState}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
-            accentColor: '#8b5cf6', // violet-500
+            accentColor: '#8b5cf6',
             accentColorForeground: 'white',
             borderRadius: 'medium',
           })}

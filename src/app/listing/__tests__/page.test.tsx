@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import { renderWithProviders } from '@/test/render'
-import { ListingDetail } from '../[id]/page'
+import { ListingDetail } from '../[id]/_listing-detail'
 
 vi.mock('wagmi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('wagmi')>()

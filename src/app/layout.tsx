@@ -1,12 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { headers } from 'next/headers'
-import { cookieToInitialState } from 'wagmi'
 import { ThemeProvider } from 'next-themes'
 import Link from 'next/link'
 import { Providers } from '@/components/providers'
 import { ConnectWallet } from '@/components/connect-wallet'
-import { wagmiConfig } from '@/lib/wagmi'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -16,19 +13,16 @@ export const metadata: Metadata = {
   description: 'Trade, rent, and fork AI agent memory on-chain.',
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const cookie = (await headers()).get('cookie')
-  const initialState = cookieToInitialState(wagmiConfig, cookie)
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
-          <Providers initialState={initialState}>
+          <Providers>
             <div className="min-h-screen flex flex-col bg-background">
               <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
