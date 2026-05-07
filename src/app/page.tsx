@@ -106,19 +106,19 @@ export default function LandingPage() {
             Six months of agent experience, gone in a server reset.
           </h2>
           <p className="text-sm text-white/55 leading-relaxed mb-4">
-            Today's autonomous agents are amnesiac employees. A trading agent that
+            Today&apos;s autonomous agents are amnesiac employees. A trading agent that
             spent six months learning DeFi pool dynamics has no way to carry that
             experience to a new deployment. A support agent that handled 10,000
-            tickets can't transfer its learned response patterns to its replacement.
+            tickets can&apos;t transfer its learned response patterns to its replacement.
             The operational memory — the part that took real time and real
             interactions to build — lives inside a Postgres row or a vector store
-            on someone else's infrastructure.
+            on someone else&apos;s infrastructure.
           </p>
           <p className="text-sm text-white/55 leading-relaxed">
-            This is fine when agents are toys. It's a serious problem now that
+            This is fine when agents are toys. It&apos;s a serious problem now that
             agents are starting to do real work, hold real positions, and represent
             real economic value. Memory that was earned should be ownable. Memory
-            that's ownable can be priced, transferred, and inherited.
+            that&apos;s ownable can be priced, transferred, and inherited.
           </p>
         </div>
       </section>
@@ -131,7 +131,7 @@ export default function LandingPage() {
           Why on-chain
         </p>
         <h2 className="text-3xl font-bold text-white mb-12">
-          Three properties that aren't optional for agent memory.
+          Three properties that aren&apos;t optional for agent memory.
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {whyOnChain.map((item) => (
@@ -191,7 +191,7 @@ export default function LandingPage() {
           Who builds with Mnemos
         </p>
         <h2 className="text-3xl font-bold text-white mb-12">
-          Built for the agent economy that's already arriving.
+          Built for the agent economy that&apos;s already arriving.
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {whoFor.map((item) => (
