@@ -85,10 +85,11 @@ export default function LandingPage() {
               Browse marketplace
             </Link>
             <Link
-              href="/dashboard"
+              href="https://mnemos-api.imhuman.fun/docs#/"
+              target='_blank'
               className="glass inline-block px-6 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
             >
-              Producer dashboard
+              API docs
             </Link>
           </div>
         </div>
