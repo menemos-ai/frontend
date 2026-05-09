@@ -70,7 +70,7 @@ export default function LandingPage() {
       {/* The Problem */}
       <RevealSection>
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-          <div className="glass-card rounded-2xl p-8 max-w-2xl">
+          <div className="glass-card rounded-2xl p-8 max-w-2xl mx-auto">
             <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
               The problem
             </p>
@@ -197,7 +197,7 @@ export default function LandingPage() {
       {/* Protocol callout */}
       <RevealSection>
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-          <div className="glass-card rounded-2xl p-8 max-w-2xl">
+          <div className="glass-card rounded-2xl p-8 max-w-2xl mx-auto">
             <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
               Open protocol
             </p>
