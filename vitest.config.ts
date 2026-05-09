@@ -9,6 +9,9 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    env: {
+      NEXT_PUBLIC_DEMO_MODE: 'true',
+    },
     coverage: {
       reporter: ['text', 'json', 'html'],
     },

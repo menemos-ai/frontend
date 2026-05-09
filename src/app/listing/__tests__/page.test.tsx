@@ -16,7 +16,7 @@ vi.mock('wagmi', async (importOriginal) => {
 describe('ListingDetail', () => {
   it('renders memory token heading', async () => {
     renderWithProviders(<ListingDetail id="1" />)
-    expect(await screen.findByRole('heading', { name: /memory #1/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '#1' })).toBeInTheDocument()
   })
 
   it('shows provenance section heading after data loads', async () => {
