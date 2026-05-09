@@ -1,8 +1,25 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import LandingPage from '../page'
 
+function makeMatchMedia(reducedMotion: boolean) {
+  return vi.fn().mockImplementation((query: string) => ({
+    matches: reducedMotion && query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }))
+}
+
 describe('LandingPage (integration)', () => {
+  beforeEach(() => {
+    Object.defineProperty(window, 'matchMedia', { writable: true, value: makeMatchMedia(false) })
+    // jsdom returns getBoundingClientRect().top = 0; set innerHeight = 0 so all sections
+    // appear below the fold, ensuring the reveal class is added during mount.
+    Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 0 })
+  })
   it('renders without errors', async () => {
     await act(async () => {
       render(<LandingPage />)

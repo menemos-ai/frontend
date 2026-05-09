@@ -11,6 +11,14 @@ export function RevealSection({ children }: { children: React.ReactNode }) {
 
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
+    // Skip reveal animation for sections already in the viewport at mount to prevent FOUC.
+    // getBoundingClientRect is synchronous, so this avoids the invisible flash that would occur
+    // if we added the 'reveal' class and then immediately received an IO callback.
+    const rect = el.getBoundingClientRect()
+    if (rect.top < window.innerHeight) {
+      return
+    }
+
     el.classList.add('reveal')
 
     const observer = new IntersectionObserver(

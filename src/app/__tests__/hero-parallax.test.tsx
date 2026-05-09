@@ -19,13 +19,25 @@ function makeMatchMedia(reducedMotion: boolean) {
 }
 
 describe('HeroParallax', () => {
+  // rAF fires async in jsdom; stub with immediate version for the whole suite.
+  // We restore by re-stubbing originals (not vi.unstubAllGlobals — that removes the
+  // IntersectionObserver mock from setup.ts, breaking Next.js Link in subsequent tests).
+  let origRAF: typeof window.requestAnimationFrame
+  let origCAF: typeof window.cancelAnimationFrame
+
   beforeEach(() => {
     setScrollY(0)
     Object.defineProperty(window, 'matchMedia', { writable: true, value: makeMatchMedia(false) })
+    origRAF = window.requestAnimationFrame.bind(window)
+    origCAF = window.cancelAnimationFrame.bind(window)
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 0 })
+    vi.stubGlobal('cancelAnimationFrame', vi.fn())
   })
 
   afterEach(() => {
     setScrollY(0)
+    vi.stubGlobal('requestAnimationFrame', origRAF)
+    vi.stubGlobal('cancelAnimationFrame', origCAF)
   })
 
   it('renders h1 with expected content', () => {
@@ -43,31 +55,18 @@ describe('HeroParallax', () => {
   })
 
   it('applies translateY transform to h1 on scroll', async () => {
-    // rAF fires async in jsdom; save originals and stub with immediate version for this test only.
-    // We restore by re-stubbing (not vi.unstubAllGlobals — that would remove the IntersectionObserver
-    // mock added in setup.ts, breaking Next.js Link in subsequent tests).
-    const origRAF = window.requestAnimationFrame.bind(window)
-    const origCAF = window.cancelAnimationFrame.bind(window)
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 0 })
-    vi.stubGlobal('cancelAnimationFrame', vi.fn())
-
     render(<HeroParallax />)
     const heading = screen.getByRole('heading', { level: 1 })
 
     setScrollY(100)
     await act(async () => { fireEvent.scroll(window) })
 
-    expect(heading.style.transform).toBe('translateY(-30px)')
-
-    vi.stubGlobal('requestAnimationFrame', origRAF)
-    vi.stubGlobal('cancelAnimationFrame', origCAF)
+    // Positive multiplier: h1 moves at 70% of scroll speed (true parallax, slower than content)
+    expect(heading.style.transform).toBe('translateY(30px)')
   })
 
   it('does not apply transform when prefers-reduced-motion is set', async () => {
     Object.defineProperty(window, 'matchMedia', { writable: true, value: makeMatchMedia(true) })
-
-    const origRAF = window.requestAnimationFrame.bind(window)
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => { cb(0); return 0 })
 
     render(<HeroParallax />)
     const heading = screen.getByRole('heading', { level: 1 })
@@ -76,17 +75,16 @@ describe('HeroParallax', () => {
     await act(async () => { fireEvent.scroll(window) })
 
     expect(heading.style.transform).toBe('')
-
-    vi.stubGlobal('requestAnimationFrame', origRAF)
   })
 
-  it('removes scroll listener on unmount', async () => {
+  it('removes scroll listener and cancels rAF on unmount', async () => {
     const removeSpy = vi.spyOn(window, 'removeEventListener')
 
     const { unmount } = render(<HeroParallax />)
     await act(async () => { unmount() })
 
     expect(removeSpy).toHaveBeenCalledWith('scroll', expect.any(Function))
+    expect(window.cancelAnimationFrame).toHaveBeenCalled()
     removeSpy.mockRestore()
   })
 })

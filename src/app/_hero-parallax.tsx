@@ -20,7 +20,9 @@ export function HeroParallax() {
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
         if (headlineRef.current) {
-          headlineRef.current.style.transform = `translateY(${window.scrollY * -0.3}px)`
+          // Positive offset slows the headline relative to the page (true parallax: h1 moves at
+          // 70% of scroll speed). Negative would accelerate it and bleed it into the sticky header.
+          headlineRef.current.style.transform = `translateY(${window.scrollY * 0.3}px)`
         }
       })
     }
@@ -30,6 +32,7 @@ export function HeroParallax() {
     return () => {
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(rafId)
+      el.style.willChange = 'auto'
     }
   }, [])
 

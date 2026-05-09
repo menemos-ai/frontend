@@ -33,6 +33,9 @@ describe('RevealSection', () => {
     // Reset IO mock call history
     vi.mocked(IntersectionObserver).mockClear()
     Object.defineProperty(window, 'matchMedia', { writable: true, value: makeMatchMedia(false) })
+    // jsdom returns getBoundingClientRect().top = 0; set innerHeight = 0 so sections
+    // appear below the fold (0 < 0 is false), allowing the reveal class to be added.
+    Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 0 })
   })
 
   it('renders children', () => {
@@ -133,5 +136,21 @@ describe('RevealSection', () => {
     await act(async () => { unmount() })
 
     expect(lastInstance.disconnect).toHaveBeenCalled()
+  })
+
+  it('does not add reveal class when section is already in the viewport at mount', async () => {
+    // Simulate innerHeight > getBoundingClientRect().top (0) so the FOUC guard fires
+    Object.defineProperty(window, 'innerHeight', { writable: true, configurable: true, value: 1000 })
+
+    const { container } = render(
+      <RevealSection>
+        <p>content</p>
+      </RevealSection>,
+    )
+    await act(async () => {})
+    const wrapper = container.firstElementChild as HTMLElement
+
+    expect(wrapper.classList.contains('reveal')).toBe(false)
+    expect(wrapper.classList.contains('visible')).toBe(false)
   })
 })
