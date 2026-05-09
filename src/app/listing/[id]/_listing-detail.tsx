@@ -315,17 +315,26 @@ function ForkPanel({
         value: forkPrice,
       })
 
-      if (publicClient) {
-        const receipt = await publicClient.waitForTransactionReceipt({ hash })
-        const parsed = parseEventLogs({
-          abi: MARKETPLACE_ABI,
-          eventName: 'Forked',
-          logs: receipt.logs,
-        })
-        setChildTokenId(parsed[0]?.args.childTokenId?.toString() ?? null)
-      }
-
+      // Show success card immediately — don't block on receipt
       setTxHash(hash)
+
+      // Best-effort: extract childTokenId from Forked event log
+      if (publicClient) {
+        try {
+          const receipt = await publicClient.waitForTransactionReceipt({
+            hash,
+            timeout: 60_000,
+          })
+          const parsed = parseEventLogs({
+            abi: MARKETPLACE_ABI,
+            eventName: 'Forked',
+            logs: receipt.logs,
+          })
+          setChildTokenId(parsed[0]?.args.childTokenId?.toString() ?? null)
+        } catch {
+          // Receipt not available in time — tx hash link still shown
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Transaction failed')
     } finally {
