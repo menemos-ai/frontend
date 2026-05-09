@@ -115,7 +115,7 @@ describe('ListingDetail', () => {
         await Promise.resolve()
         await Promise.resolve()
       })
-      expect(screen.getByText(/fork berhasil/i)).toBeInTheDocument()
+      expect(screen.getByText(/fork confirmed/i)).toBeInTheDocument()
     })
 
     it('shows child token ID after Forked event parsed', async () => {

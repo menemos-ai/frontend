@@ -361,7 +361,7 @@ function ForkPanel({
           <div className="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span className="text-xs text-emerald-400 font-medium">Fork berhasil ✓</span>
+              <span className="text-xs text-emerald-400 font-medium">Fork confirmed ✓</span>
             </div>
             <a
               href={`${ogChain.blockExplorers.default.url}/tx/${txHash}`}
