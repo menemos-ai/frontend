@@ -27,6 +27,8 @@ interface MintedToken {
   tokenId: string
   contentHash: string
   blockNumber: bigint
+  parentTokenId?: string  // present if this token was created via fork
+  forkedByCount: number   // how many times this token has been forked
 }
 
 interface Rental {
@@ -254,16 +256,34 @@ function TokenRow({
         className="flex items-center justify-between px-5 py-4 cursor-pointer"
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-mono text-white/50">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href={`/listing/${token.tokenId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-sm font-mono text-white/70 hover:text-white transition-colors shrink-0"
+          >
             #{token.tokenId}
-          </span>
-          <span className="text-xs font-mono text-white/30">
+          </Link>
+          {token.parentTokenId && (
+            <Link
+              href={`/listing/${token.parentTokenId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-300 font-medium hover:bg-pink-500/30 transition-colors shrink-0"
+            >
+              Fork of #{token.parentTokenId}
+            </Link>
+          )}
+          {token.forkedByCount > 0 && (
+            <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 border border-white/15 text-white/40 font-medium shrink-0">
+              {token.forkedByCount} fork{token.forkedByCount > 1 ? 's' : ''}
+            </span>
+          )}
+          <span className="text-xs font-mono text-white/30 truncate hidden sm:inline">
             {bytesToHex(token.contentHash as `0x${string}`)}
           </span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-mono text-white/30">
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-xs font-mono text-white/30 hidden md:inline">
             block #{token.blockNumber.toString()}
           </span>
           <span
@@ -690,22 +710,49 @@ export default function DashboardPage() {
 
     async function scanMinted() {
       try {
-        const logs = await publicClient!.getLogs({
-          address: registryAddress,
-          event: MEMORY_MINTED_EVENT,
-          fromBlock: 0n,
-          toBlock: 'latest',
-          args: { creator: address },
-          strict: true,
-        })
+        const [mintedLogs, forkedLogs] = await Promise.all([
+          publicClient!.getLogs({
+            address: registryAddress,
+            event: MEMORY_MINTED_EVENT,
+            fromBlock: 0n,
+            toBlock: 'latest',
+            args: { creator: address },
+            strict: true,
+          }),
+          MARKETPLACE_ADDRESS
+            ? publicClient!.getLogs({
+                address: MARKETPLACE_ADDRESS,
+                event: FORKED_EVENT,
+                fromBlock: 0n,
+                toBlock: 'latest',
+                strict: true,
+              })
+            : Promise.resolve([]),
+        ])
 
         if (cancelled) return
 
-        const minted = logs.map((log) => ({
-          tokenId: log.args.tokenId!.toString(),
-          contentHash: log.args.contentHash as string,
-          blockNumber: log.blockNumber ?? 0n,
-        })).reverse()
+        // child token id → parent token id
+        const childToParent = new Map<string, string>()
+        // parent token id → number of children forked from it
+        const forkCounts = new Map<string, number>()
+        for (const log of forkedLogs) {
+          const childId = log.args.childTokenId!.toString()
+          const parentId = log.args.parentTokenId!.toString()
+          childToParent.set(childId, parentId)
+          forkCounts.set(parentId, (forkCounts.get(parentId) ?? 0) + 1)
+        }
+
+        const minted = mintedLogs.map((log) => {
+          const tokenId = log.args.tokenId!.toString()
+          return {
+            tokenId,
+            contentHash: log.args.contentHash as string,
+            blockNumber: log.blockNumber ?? 0n,
+            parentTokenId: childToParent.get(tokenId),
+            forkedByCount: forkCounts.get(tokenId) ?? 0,
+          }
+        }).reverse()
 
         setTokens(minted)
       } catch {
