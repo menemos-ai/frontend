@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { HeroParallax } from './_hero-parallax'
+import { RevealSection } from './_reveal-section'
 
 const steps = [
   {
@@ -60,193 +62,164 @@ const whoFor = [
 export default function LandingPage() {
   return (
     <div className="flex flex-col">
-      {/* Hero */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-24">
-        <div className="max-w-3xl">
-          <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-6">
-            On-chain agent memory
-          </p>
-          <h1 className="text-6xl font-bold text-white leading-tight tracking-tight mb-6">
-            AI agents have memory.{' '}
-            <span className="gradient-text">Until now, no one owned it.</span>
-          </h1>
-          <p className="text-lg text-white/55 leading-relaxed mb-10 max-w-xl">
-            Every autonomous agent accumulates something valuable while it works —
-            trade history, learned patterns, customer interactions, strategy weights.
-            That experience disappears when the agent shuts down, and stays trapped
-            inside whatever runtime hosts it. Mnemos turns it into a portable,
-            ownable, tradeable asset on 0G.
-          </p>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/marketplace"
-              className="btn-glow inline-block px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
-            >
-              Browse marketplace
-            </Link>
-            <Link
-              href="https://mnemos-api.imhuman.fun/docs#/"
-              target='_blank'
-              className="glass inline-block px-6 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
-            >
-              API docs
-            </Link>
-            <Link
-              href="https://www.npmjs.com/package/@mnemos-sdk/sdk?activeTab=readme"
-              target='_blank'
-              className="glass inline-block px-6 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
-            >
-              NPM SDK
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Hero — client component handles scroll parallax on h1 */}
+      <HeroParallax />
 
       <div className="border-t border-white/10" />
 
       {/* The Problem */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-        <div className="glass-card rounded-2xl p-8 max-w-2xl">
-          <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
-            The problem
-          </p>
-          <h2 className="text-2xl font-bold text-white mb-3">
-            Six months of agent experience, gone in a server reset.
-          </h2>
-          <p className="text-sm text-white/55 leading-relaxed mb-4">
-            Today&apos;s autonomous agents are amnesiac employees. A trading agent that
-            spent six months learning DeFi pool dynamics has no way to carry that
-            experience to a new deployment. A support agent that handled 10,000
-            tickets can&apos;t transfer its learned response patterns to its replacement.
-            The operational memory — the part that took real time and real
-            interactions to build — lives inside a Postgres row or a vector store
-            on someone else&apos;s infrastructure.
-          </p>
-          <p className="text-sm text-white/55 leading-relaxed">
-            This is fine when agents are toys. It&apos;s a serious problem now that
-            agents are starting to do real work, hold real positions, and represent
-            real economic value. Memory that was earned should be ownable. Memory
-            that&apos;s ownable can be priced, transferred, and inherited.
-          </p>
-        </div>
-      </section>
+      <RevealSection>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+          <div className="glass-card rounded-2xl p-8 max-w-2xl">
+            <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
+              The problem
+            </p>
+            <h2 className="text-2xl font-bold text-white mb-3">
+              Six months of agent experience, gone in a server reset.
+            </h2>
+            <p className="text-sm text-white/55 leading-relaxed mb-4">
+              Today&apos;s autonomous agents are amnesiac employees. A trading agent that
+              spent six months learning DeFi pool dynamics has no way to carry that
+              experience to a new deployment. A support agent that handled 10,000
+              tickets can&apos;t transfer its learned response patterns to its replacement.
+              The operational memory — the part that took real time and real
+              interactions to build — lives inside a Postgres row or a vector store
+              on someone else&apos;s infrastructure.
+            </p>
+            <p className="text-sm text-white/55 leading-relaxed">
+              This is fine when agents are toys. It&apos;s a serious problem now that
+              agents are starting to do real work, hold real positions, and represent
+              real economic value. Memory that was earned should be ownable. Memory
+              that&apos;s ownable can be priced, transferred, and inherited.
+            </p>
+          </div>
+        </section>
+      </RevealSection>
 
       <div className="border-t border-white/10" />
 
       {/* Why On-Chain */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-        <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
-          Why on-chain
-        </p>
-        <h2 className="text-3xl font-bold text-white mb-12">
-          Three properties that aren&apos;t optional for agent memory.
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {whyOnChain.map((item) => (
-            <div
-              key={item.label}
-              className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
-            >
-              <span className="text-xs font-mono text-violet-400 tracking-widest uppercase block mb-5 opacity-60">
-                {item.label}
-              </span>
-              <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
-                {item.title}
-              </h3>
-              <p className="text-sm text-white/50 leading-relaxed">
-                {item.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <RevealSection>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+          <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
+            Why on-chain
+          </p>
+          <h2 className="text-3xl font-bold text-white mb-12">
+            Three properties that aren&apos;t optional for agent memory.
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {whyOnChain.map((item) => (
+              <div
+                key={item.label}
+                className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
+              >
+                <span className="text-xs font-mono text-violet-400 tracking-widest uppercase block mb-5 opacity-60">
+                  {item.label}
+                </span>
+                <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </RevealSection>
 
       <div className="border-t border-white/10" />
 
       {/* How it works */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-        <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
-          How it works
-        </p>
-        <h2 className="text-3xl font-bold text-white mb-12">
-          Three steps to own AI memory.
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {steps.map((s) => (
-            <div
-              key={s.step}
-              className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
-            >
-              <span className="text-5xl font-light gradient-text font-mono block mb-5 opacity-60">
-                {s.step}
-              </span>
-              <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
-                {s.title}
-              </h3>
-              <p className="text-sm text-white/50 leading-relaxed">
-                {s.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <RevealSection>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+          <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
+            How it works
+          </p>
+          <h2 className="text-3xl font-bold text-white mb-12">
+            Three steps to own AI memory.
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {steps.map((s) => (
+              <div
+                key={s.step}
+                className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
+              >
+                <span className="text-5xl font-light gradient-text font-mono block mb-5 opacity-60">
+                  {s.step}
+                </span>
+                <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
+                  {s.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {s.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </RevealSection>
 
       <div className="border-t border-white/10" />
 
       {/* Who is this for */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-        <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
-          Who builds with Mnemos
-        </p>
-        <h2 className="text-3xl font-bold text-white mb-12">
-          Built for the agent economy that&apos;s already arriving.
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {whoFor.map((item) => (
-            <div
-              key={item.label}
-              className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
-            >
-              <span className="text-xs font-mono text-violet-400 tracking-widest uppercase block mb-5 opacity-60">
-                {item.label}
-              </span>
-              <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
-                {item.title}
-              </h3>
-              <p className="text-sm text-white/50 leading-relaxed">
-                {item.body}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <RevealSection>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+          <p className="text-xs font-mono text-white/40 tracking-widest uppercase mb-4">
+            Who builds with Mnemos
+          </p>
+          <h2 className="text-3xl font-bold text-white mb-12">
+            Built for the agent economy that&apos;s already arriving.
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {whoFor.map((item) => (
+              <div
+                key={item.label}
+                className="glass-card rounded-2xl p-6 hover:border-violet-500/30 transition-all duration-300 group"
+              >
+                <span className="text-xs font-mono text-violet-400 tracking-widest uppercase block mb-5 opacity-60">
+                  {item.label}
+                </span>
+                <h3 className="text-base font-semibold text-white mb-2 group-hover:text-violet-300 transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-white/50 leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </RevealSection>
 
       <div className="border-t border-white/10" />
 
       {/* Protocol callout */}
-      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
-        <div className="glass-card rounded-2xl p-8 max-w-2xl">
-          <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
-            Open protocol
-          </p>
-          <h2 className="text-2xl font-bold text-white mb-3">
-            This is one interface. Build the next one.
-          </h2>
-          <p className="text-sm text-white/55 leading-relaxed mb-6">
-            Mnemos is an open protocol — the contracts, the SDK, and the storage
-            layer are public infrastructure. This marketplace is just one reference
-            implementation, designed to make the primitives concrete. Any agent
-            runtime, any UI, any team can build directly on the same contracts.
-            The memory layer is shared. Everything else is up for grabs.
-          </p>
-          <Link
-            href="/marketplace"
-            className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors"
-          >
-            Browse the marketplace →
-          </Link>
-        </div>
-      </section>
+      <RevealSection>
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24">
+          <div className="glass-card rounded-2xl p-8 max-w-2xl">
+            <p className="text-xs font-mono text-violet-400 tracking-widest uppercase mb-4">
+              Open protocol
+            </p>
+            <h2 className="text-2xl font-bold text-white mb-3">
+              This is one interface. Build the next one.
+            </h2>
+            <p className="text-sm text-white/55 leading-relaxed mb-6">
+              Mnemos is an open protocol — the contracts, the SDK, and the storage
+              layer are public infrastructure. This marketplace is just one reference
+              implementation, designed to make the primitives concrete. Any agent
+              runtime, any UI, any team can build directly on the same contracts.
+              The memory layer is shared. Everything else is up for grabs.
+            </p>
+            <Link
+              href="/marketplace"
+              className="inline-flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              Browse the marketplace →
+            </Link>
+          </div>
+        </section>
+      </RevealSection>
     </div>
   )
 }
