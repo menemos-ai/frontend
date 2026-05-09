@@ -91,6 +91,13 @@ export default function LandingPage() {
             >
               API docs
             </Link>
+            <Link
+              href="https://www.npmjs.com/package/@mnemos-sdk/sdk?activeTab=readme"
+              target='_blank'
+              className="glass inline-block px-6 py-2.5 rounded-xl text-sm font-medium text-white/80 hover:text-white transition-colors"
+            >
+              NPM SDK
+            </Link>
           </div>
         </div>
       </section>
