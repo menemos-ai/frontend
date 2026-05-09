@@ -34,10 +34,9 @@ describe('ListingDetail', () => {
     expect(await screen.findByRole('heading', { name: /^rent$/i })).toBeInTheDocument()
   })
 
-  it('renders fork panel button as disabled', async () => {
+  it('renders fork panel "not available" message when forkPrice is 0', async () => {
     renderWithProviders(<ListingDetail id="1" />)
-    const forkBtn = await screen.findByRole('button', { name: /use the sdk/i })
-    expect(forkBtn).toBeDisabled()
+    expect(await screen.findByText(/not available for fork/i)).toBeInTheDocument()
   })
 
   it('shows connect wallet prompt when not connected', async () => {

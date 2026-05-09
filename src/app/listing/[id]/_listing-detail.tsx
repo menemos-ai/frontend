@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi'
-import { formatEther } from 'viem'
+import { formatEther, keccak256, encodePacked, parseEventLogs } from 'viem'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -252,33 +253,140 @@ function RentPanel({
   )
 }
 
-function ForkPanel({ listing }: { listing: ListingInfo }) {
-  const isForFork = BigInt(listing.forkPrice) > 0n
+function ForkPanel({
+  listing,
+  tokenId,
+  info,
+}: {
+  listing: ListingInfo
+  tokenId: bigint
+  info: MemoryInfo
+}) {
+  const { address } = useAccount()
+  const { writeContractAsync } = useWriteContract()
+  const publicClient = usePublicClient()
+  const [pending, setPending] = useState(false)
+  const [txHash, setTxHash] = useState<string | null>(null)
+  const [childTokenId, setChildTokenId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const forkPrice = BigInt(listing.forkPrice)
+
+  if (forkPrice === 0n) {
+    return (
+      <div className="glass-card rounded-2xl p-5">
+        <h3 className="text-sm font-semibold text-white/40 mb-1">Fork</h3>
+        <p className="text-xs text-white/30">Not available for fork.</p>
+      </div>
+    )
+  }
+
+  if (!MARKETPLACE_ADDRESS) {
+    return (
+      <div className="glass-card rounded-2xl p-5">
+        <h3 className="text-sm font-semibold text-white/40 mb-1">Fork</h3>
+        <p className="text-xs text-white/30">Contract not configured.</p>
+      </div>
+    )
+  }
+
+  const marketplaceAddr = MARKETPLACE_ADDRESS
+
+  async function handleFork() {
+    setPending(true)
+    setError(null)
+    try {
+      const childContentHash = keccak256(
+        encodePacked(
+          ['bytes32', 'address', 'uint256'],
+          [
+            info.contentHash as `0x${string}`,
+            address!,
+            BigInt(Math.floor(Date.now() / 1000)),
+          ],
+        ),
+      )
+
+      const hash = await writeContractAsync({
+        address: marketplaceAddr,
+        abi: MARKETPLACE_ABI,
+        functionName: 'fork',
+        args: [tokenId, childContentHash, info.storageUri],
+        value: forkPrice,
+      })
+
+      if (publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash })
+        const parsed = parseEventLogs({
+          abi: MARKETPLACE_ABI,
+          eventName: 'Forked',
+          logs: receipt.logs,
+        })
+        setChildTokenId(parsed[0]?.args.childTokenId?.toString() ?? null)
+      }
+
+      setTxHash(hash)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Transaction failed')
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
     <div className="glass-card rounded-2xl p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className={`text-sm font-semibold ${isForFork ? 'text-white' : 'text-white/40'}`}>
-          Fork
-        </h3>
-        {isForFork && (
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-300 font-medium">
-            {(listing.royaltyBps / 100).toFixed(2)}% royalty
-          </span>
-        )}
+        <h3 className="text-sm font-semibold text-white">Fork</h3>
+        <span className="text-[10px] px-2.5 py-1 rounded-full bg-pink-500/20 border border-pink-500/30 text-pink-300 font-medium">
+          {(listing.royaltyBps / 100).toFixed(2)}% royalty
+        </span>
       </div>
-      {isForFork ? (
-        <p className="text-xs text-white/40">
-          Forking requires uploading a child memory bundle via the SDK.
-        </p>
-      ) : (
-        <p className="text-xs text-white/30">Not available for fork.</p>
+      <div className="flex items-baseline justify-between">
+        <span className="text-xs text-white/40">Price</span>
+        <span className="text-2xl font-bold gradient-text">
+          {formatEther(forkPrice)} A0GI
+        </span>
+      </div>
+      {txHash && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="text-xs text-emerald-400 font-medium">Fork berhasil ✓</span>
+            </div>
+            <a
+              href={`${ogChain.blockExplorers.default.url}/tx/${txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-mono text-emerald-400/70 hover:text-emerald-300 underline underline-offset-2 transition-colors"
+            >
+              {truncate(txHash)} ↗
+            </a>
+          </div>
+          {childTokenId && (
+            <div className="flex items-center justify-between gap-2 bg-pink-500/10 border border-pink-500/20 rounded-lg px-3 py-2">
+              <span className="text-xs text-pink-300 font-medium">
+                Child Token #{childTokenId}
+              </span>
+              <Link
+                href={`/listing/${childTokenId}`}
+                className="text-[11px] text-pink-400/70 hover:text-pink-300 underline underline-offset-2 transition-colors"
+              >
+                View →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+      {error && (
+        <p className="text-xs text-red-400">{error}</p>
       )}
       <Button
-        disabled
-        variant="outline"
-        className="w-full border-white/15 text-white/30 cursor-not-allowed rounded-xl h-10 bg-transparent hover:bg-transparent"
+        onClick={handleFork}
+        disabled={pending || !!txHash}
+        className="w-full btn-glow text-white rounded-xl h-10"
       >
-        Use the SDK to fork this memory
+        {pending ? 'Forking…' : txHash ? 'Forked ✓' : 'Fork Now'}
       </Button>
     </div>
   )
@@ -458,11 +566,11 @@ export function ListingDetail({ id }: { id: string }) {
                 </div>
               ))}
             </div>
-          ) : listing ? (
+          ) : listing && info ? (
             <>
               <BuyPanel listing={listing} tokenId={tokenId} />
               <RentPanel listing={listing} tokenId={tokenId} />
-              <ForkPanel listing={listing} />
+              <ForkPanel listing={listing} tokenId={tokenId} info={info} />
             </>
           ) : null}
         </div>
