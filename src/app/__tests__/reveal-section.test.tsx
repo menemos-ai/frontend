@@ -30,8 +30,10 @@ function makeMatchMedia(reducedMotion: boolean) {
 
 describe('RevealSection', () => {
   beforeEach(() => {
-    // Reset IO mock call history
+    // Reset IO mock call history and the lastCallback property (mockClear resets call
+    // counts but not properties set directly on the mock function).
     vi.mocked(IntersectionObserver).mockClear()
+    ;(IntersectionObserver as IOWithCallback).lastCallback = undefined
     Object.defineProperty(window, 'matchMedia', { writable: true, value: makeMatchMedia(false) })
     // jsdom returns getBoundingClientRect().top = 0; set innerHeight = 0 so sections
     // appear below the fold (0 < 0 is false), allowing the reveal class to be added.
