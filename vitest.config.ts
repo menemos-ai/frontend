@@ -9,6 +9,11 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    env: {
+      NEXT_PUBLIC_DEMO_MODE: 'true',
+      NEXT_PUBLIC_MARKETPLACE_ADDRESS: '0x0000000000000000000000000000000000000001',
+      NEXT_PUBLIC_REGISTRY_ADDRESS: '0x0000000000000000000000000000000000000002',
+    },
     coverage: {
       reporter: ['text', 'json', 'html'],
     },
