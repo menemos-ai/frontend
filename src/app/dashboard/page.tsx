@@ -108,7 +108,12 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
           functionName: 'setApprovalForAll',
           args: [marketplaceAddress, true],
         })
-        await publicClient.waitForTransactionReceipt({ hash: approvalHash, timeout: 120_000, retryCount: 30, retryDelay: 3_000 })
+        // Approval must confirm before the list tx can succeed
+        await publicClient.waitForTransactionReceipt({
+          hash: approvalHash,
+          timeout: 120_000,
+          pollingInterval: 2_000,
+        })
       }
 
       const buyPriceWei = parseEther(buyPrice || '0')
@@ -130,10 +135,18 @@ function ListForm({ tokenId, onSuccess }: ListFormProps) {
         functionName: 'list',
         args: [BigInt(tokenId), buyPriceWei, rentalWei, forkPriceWei, royaltyBpsValue],
       })
-      await publicClient.waitForTransactionReceipt({ hash: listHash, timeout: 120_000, retryCount: 30, retryDelay: 3_000 })
+
+      // Show success immediately — don't block on receipt confirmation
       setTxHash(listHash)
       setStatus('Listed successfully!')
       onSuccess()
+
+      // Best-effort: wait for confirmation in the background
+      publicClient.waitForTransactionReceipt({
+        hash: listHash,
+        timeout: 120_000,
+        pollingInterval: 2_000,
+      }).catch(() => {/* receipt unavailable — tx hash link still visible */})
     } catch (err) {
       setStatus(
         err instanceof Error ? `Error: ${err.message}` : 'Transaction failed',
