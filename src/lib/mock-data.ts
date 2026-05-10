@@ -70,6 +70,7 @@ export const MOCK_MEMORY_INFO: Record<string, MemoryInfo> = {
     creator: '0x742d35Cc6634C0532925a3b8D4C9c5e9C8b5F0a1',
     parent: null,
     timestamp: '1746057600',
+    title: 'Momentum Rebalancer v1',
   },
   '2': {
     tokenId: '2',
@@ -78,6 +79,7 @@ export const MOCK_MEMORY_INFO: Record<string, MemoryInfo> = {
     creator: '0x8ba1f109551bD432803012645Hac136c9C8cF0a2',
     parent: '1',
     timestamp: '1746144000',
+    title: 'Yield Optimizer v2',
   },
   '3': {
     tokenId: '3',

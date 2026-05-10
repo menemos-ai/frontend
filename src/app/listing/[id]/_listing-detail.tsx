@@ -15,6 +15,7 @@ import {
   REGISTRY_ABI,
 } from '@/lib/contracts'
 import type { MemoryInfo, ListingInfo } from '@/lib/api'
+import { fetchMemoryInfo } from '@/lib/api'
 import { DEMO_MODE, MOCK_MEMORY_INFO, MOCK_LISTING_INFO } from '@/lib/mock-data'
 import { ogChain } from '@/lib/wagmi'
 
@@ -422,6 +423,7 @@ export function ListingDetail({ id }: { id: string }) {
   const [listing, setListing] = useState<ListingInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [title, setTitle] = useState<string | null>(null)
   const isDemo = DEMO_MODE && !!MOCK_MEMORY_INFO[id]
 
   useEffect(() => {
@@ -509,6 +511,25 @@ export function ListingDetail({ id }: { id: string }) {
     }
   }, [id, publicClient, tokenId])
 
+  useEffect(() => {
+    let cancelled = false
+
+    if (DEMO_MODE && MOCK_MEMORY_INFO[id]) {
+      setTitle(MOCK_MEMORY_INFO[id].title ?? null)
+      return
+    }
+
+    fetchMemoryInfo(id)
+      .then((memInfo) => {
+        if (!cancelled) setTitle(memInfo.title ?? null)
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [id])
+
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
       <div className="mb-8">
@@ -520,7 +541,7 @@ export function ListingDetail({ id }: { id: string }) {
             </span>
           )}
         </div>
-        <h1 className="text-3xl font-bold text-white">#{id}</h1>
+        <h1 className="text-3xl font-bold text-white">{title ?? `#${id}`}</h1>
       </div>
 
       {error && (
