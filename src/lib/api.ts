@@ -8,6 +8,7 @@ export interface MemoryInfo {
   creator: string
   parent: string | null
   timestamp: string
+  title?: string | null
 }
 
 export interface ListingInfo {

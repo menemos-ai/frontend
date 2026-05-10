@@ -12,6 +12,7 @@ export const handlers = [
       creator: '0x1234567890123456789012345678901234567890',
       parent: null,
       timestamp: '1714000000',
+      title: 'Test Memory Token',
     })
   }),
 
