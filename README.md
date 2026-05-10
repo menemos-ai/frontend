@@ -143,13 +143,9 @@ pnpm lint                    # next lint
 
 This is a static-friendly Next.js app — `pnpm build` produces output that can be deployed to Vercel, Netlify, Cloudflare Pages, or any static host. No environment variables need to be secret (everything is `NEXT_PUBLIC_*`), so the build can be public.
 
-For the hackathon demo, Vercel with the `mnemos-frontend` repo connected is the path of least resistance.
+Vercel with the `mnemos-frontend` repo connected is the path of least resistance.
 
 ---
-
-## Status
-
-Hackathon MVP for the [0G APAC Hackathon](https://www.hackquest.io/hackathons/0G-APAC-Hackathon).
 
 ## License
 

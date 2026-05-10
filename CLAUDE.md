@@ -70,7 +70,7 @@ State: prefer URL state + chain state over component state. `[id]` in the route 
 
 ## Known gaps in the current MVP
 
-The marketplace page reads `Listed` events from `fromBlock: 0n` to `latest` on every mount. This is fine on testnet but will eventually be slow. Replace with a `fromBlock` from the deployment block — copy it from the contract repo's `deployments/latest.json` and put it in an env var.
+The marketplace page reads `Listed` events from `fromBlock: 0n` to `latest` on every mount. This will get slower as block count grows. Replace with a `fromBlock` set to the deployment block — copy it from the contract repo's `deployments/latest.json` and put it in an env var (`NEXT_PUBLIC_DEPLOYMENT_BLOCK`).
 
 The listing detail page calls three `readContract` requests in parallel on mount but doesn't show partial data — it waits for all three. If `getLineage` is slow on a deep tree, this delays the whole page. Acceptable for now; future work is to render basic info immediately and lazy-load the lineage tree.
 
@@ -101,7 +101,7 @@ Anything prefixed `NEXT_PUBLIC_` is exposed to the browser; everything else is s
 
 When iterating on contract changes:
 
-1. Make change in `mnemos-contract`, redeploy (testnet or local anvil).
+1. Make change in `mnemos-contract`, redeploy (local anvil or a fresh chain deployment).
 2. Update `NEXT_PUBLIC_REGISTRY_ADDRESS` / `NEXT_PUBLIC_MARKETPLACE_ADDRESS` in `.env.local`.
 3. If the function signature, args, or events changed: update the corresponding ABI entry in `src/lib/contracts.ts`. The ABIs there are minimal — only what the UI actually calls.
 4. Restart `pnpm dev` so the env vars reload.
