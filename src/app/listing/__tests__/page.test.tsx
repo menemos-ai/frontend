@@ -38,9 +38,16 @@ describe('ListingDetail', () => {
     mocks.parseEventLogs.mockImplementation(() => [])
   })
 
-  it('renders memory token heading', async () => {
+  it('renders memory token heading with title from mock data', async () => {
+    // DEMO_MODE=true in tests; token 1 has title 'Momentum Rebalancer v1'
     renderWithProviders(<ListingDetail id="1" />)
-    expect(await screen.findByRole('heading', { name: '#1' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Momentum Rebalancer v1' })).toBeInTheDocument()
+  })
+
+  it('falls back to #id when token has no title in mock data', async () => {
+    // DEMO_MODE=true; token 3 has no title set, so heading falls back to '#3'
+    renderWithProviders(<ListingDetail id="3" />)
+    expect(await screen.findByRole('heading', { name: '#3' })).toBeInTheDocument()
   })
 
   it('shows provenance section heading after data loads', async () => {
