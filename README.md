@@ -2,6 +2,8 @@
 
 > The reference marketplace for Mnemos. Browse memory snapshots, inspect on-chain provenance, and buy / rent / fork them.
 
+For project overview, architecture diagram, and judging context, see the [root README](../README.md).
+
 This is one of three repositories that make up Mnemos:
 
 | Repo | Purpose |
@@ -33,10 +35,18 @@ Chain reads and user-signed writes go directly through wagmi/viem in the browser
 - [`wagmi`](https://wagmi.sh/) + [`viem`](https://viem.sh/) for chain I/O
 - [`@tanstack/react-query`](https://tanstack.com/query) for caching (provided by wagmi)
 - [Tailwind CSS](https://tailwindcss.com/) for styling
-- [`@mnemos/sdk`](../backend) as a peer dependency for shared types
+- [`@mnemos-sdk/sdk`](../backend) as a peer dependency for shared types
 - `mnemos-backend` REST API (NestJS, port 3001) for agent-side operations
 
 Node.js ≥ 20. Package manager: `pnpm`.
+
+---
+
+## 0G Integration
+
+The frontend reads all state directly from **0G Chain** via wagmi + viem — no backend database, no intermediary. Chain reads (`getLogs`, `readContract`) go through `https://evmrpc.0g.ai` (chain ID `16661`) using the deployed contract addresses. User-signed writes (buy, rent, fork, list) are sent directly from the user's connected wallet. The backend API is only used for server-side operations that require a private key (memory snapshot + mint, memory decrypt).
+
+---
 
 ### Responsibility split
 
